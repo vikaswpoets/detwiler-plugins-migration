@@ -1,0 +1,36 @@
+/* Product List Block Styles */
+.product-list-block {
+    padding: 60px 0;
+}
+
+.product-image {
+    position: relative;
+    overflow: hidden;
+}
+
+.product-image img {
+    width: 100%;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.product-item-inner:hover .product-image img {
+    transform: scale(1.05);
+}
+
+.product-content {
+    padding: 25px;
+}
+
+.product-heading a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+.product-list-block .buy-now-link .block-button {
+    white-space: nowrap;
+}
+.product-list-block .product-link:not(.buy-now-link) {
+    width: 261px;
+    text-align: center;
+}

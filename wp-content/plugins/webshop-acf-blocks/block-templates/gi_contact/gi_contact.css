@@ -1,0 +1,10 @@
+.gi-contact-block {
+    padding: 3.125rem 1.875rem;
+}
+.gi-contact-button {
+    color: var(--main-color);
+    background: #fff;
+}
+.gi-contact-button::after {
+    border-left-color: var(--background-red);
+}

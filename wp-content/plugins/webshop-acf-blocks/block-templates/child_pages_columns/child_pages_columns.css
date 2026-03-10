@@ -1,0 +1,71 @@
+.child-pages-columns .child-page-item {
+    height: 250px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+.child-pages-columns .child-page-item img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+.child-pages-columns .child-pages-heading {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+.child-pages-columns .child-page-title {
+    position: absolute;
+    left: 0;
+    z-index: 1;
+    color: #fff;
+    background: #32373c;
+    width: 100%;
+    margin: 0;
+    padding: 10px 15px;
+    font-weight: normal;
+    font-size: 1rem;
+    text-transform: uppercase;
+    transition: all 0.3s ease-in-out;
+    visibility: visible;
+}
+.child-pages-columns .child-page-link {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 0;
+    padding: 15px;
+    color: #fff;
+    background: rgb(213 28 35 / 70%);
+    z-index: 2;
+    transition: all 0.3s ease-in-out;
+    visibility: hidden;
+}
+.child-pages-columns .child-page-item:hover .child-page-link {
+    height: 100%;
+    visibility: visible;
+}
+.child-pages-columns .child-page-item:hover .child-page-title {
+    background: rgb(213 28 35 / 70%);
+    visibility: hidden;
+}
+.child-pages-columns .child-page-item .block-button {
+    margin: 0;
+    font-size: 1rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+.child-pages-columns .child-pages-description {
+    font-size: 1.125rem;
+    margin: auto;
+}
+.semiconductor-list-page .child-page-item {
+    height: 300px;
+}
+.application-related .child-page-item {
+    min-height: 300px;
+}

@@ -1,0 +1,9 @@
+/* Product List Block Styles */
+.production_equipment-block .description {
+    font-weight: 600;
+    font-size: 1.275rem;
+    text-align: center;
+}
+.production_equipment-block h4 {
+    font-size: 1.75rem;
+}

@@ -1,0 +1,15 @@
+{
+    "name": "gi/taxjar-integration",
+    "description": "TaxJar integration for WooCommerce",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4",
+        "taxjar/taxjar-php": "^v2.0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "GI\\TaxJar\\": "includes/"
+        }
+    },
+    "minimum-stability": "stable"
+}
