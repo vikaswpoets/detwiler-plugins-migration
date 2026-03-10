@@ -1,0 +1,49 @@
+{
+  "key": "group_custom_page_banner",
+  "title": "Custom Page Banner",
+  "fields": [
+    {
+      "key": "field_custom_banner_image",
+      "label": "Custom Banner Image",
+      "name": "custom_banner_image",
+      "type": "image",
+      "instructions": "Upload a custom banner image for this page. This will override the featured image if set.",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": {
+        "width": "",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "id",
+      "preview_size": "medium",
+      "library": "all",
+      "min_width": "",
+      "min_height": "",
+      "min_size": "",
+      "max_width": "",
+      "max_height": "",
+      "max_size": "",
+      "mime_types": "jpg, jpeg, png"
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "post_type",
+        "operator": "==",
+        "value": "page"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0,
+  "modified": 1720000000
+}

@@ -1,0 +1,381 @@
+<?php
+
+remove_action('woocommerce_cart_is_empty', 'wc_empty_cart_message', 10);
+/**
+ * Sample implementation of the WooCommerce Mini Cart.
+ *
+ * You can add the WooCommerce Mini Cart to header.php like so ...
+ *
+ * <?php
+ * if ( function_exists( 'cabling_woocommerce_header_cart' ) ) {
+ * cabling_woocommerce_header_cart();
+ * }
+ * ?>
+ */
+
+if (!function_exists('cabling_woocommerce_cart_link_fragment')) {
+    /**
+     * Cart Fragments.
+     *
+     * Ensure cart contents update when products are added to the cart via AJAX.
+     *
+     * @param array $fragments Fragments to refresh via AJAX.
+     * @return array Fragments to refresh via AJAX.
+     */
+    function cabling_woocommerce_cart_link_fragment($fragments)
+    {
+        ob_start();
+        cabling_woocommerce_cart_link();
+        $fragments['a.cart-contents'] = ob_get_clean();
+
+        return $fragments;
+    }
+}
+add_filter('woocommerce_add_to_cart_fragments', 'cabling_woocommerce_cart_link_fragment');
+
+if (!function_exists('cabling_woocommerce_cart_link')) {
+    /**
+     * Cart Link.
+     *
+     * Displayed a link to the cart including the number of items present and the cart total.
+     *
+     * @return void
+     */
+    function cabling_woocommerce_cart_link()
+    {
+        ?>
+        <a class="cart-contents" href="<?php echo esc_url(wc_get_cart_url()); ?>"
+           title="<?php esc_attr_e('View your shopping cart', 'cabling'); ?>">
+            <?php
+            $item_count_text = sprintf(
+            /* translators: number of items in the mini cart. */
+                _n('%d item', '%d items', WC()->cart->get_cart_contents_count(), 'cabling'),
+                WC()->cart->get_cart_contents_count()
+            );
+            ?>
+            <span class="amount"><?php echo wp_kses_data(WC()->cart->get_cart_subtotal()); ?></span> <span
+                    class="count"><?php echo esc_html($item_count_text); ?></span>
+        </a>
+        <?php
+    }
+}
+
+if (!function_exists('cabling_woocommerce_header_cart')) {
+    /**
+     * Display Header Cart.
+     *
+     * @return void
+     */
+    function cabling_woocommerce_header_cart()
+    {
+        if (is_cart()) {
+            $class = 'current-menu-item';
+        } else {
+            $class = '';
+        }
+        ?>
+        <ul id="site-header-cart" class="site-header-cart">
+            <li class="<?php echo esc_attr($class); ?>">
+                <?php cabling_woocommerce_cart_link(); ?>
+            </li>
+            <li>
+                <?php
+                $instance = array(
+                    'title' => '',
+                );
+
+                the_widget('WC_Widget_Cart', $instance);
+                ?>
+            </li>
+        </ul>
+        <?php
+    }
+}
+
+
+// Change Add to Cart text on product archives
+function custom_woocommerce_product_add_to_cart_text($text, $product)
+{
+    return __('Add to cart', 'cabling');
+}
+
+add_filter('woocommerce_product_add_to_cart_text', 'custom_woocommerce_product_add_to_cart_text', 10, 2);
+
+// #GID-1159
+function gi_add_to_cart_redirect($url)
+{
+    if (isset($_GET['redirect-to']) && $_GET['redirect-to'] === 'checkout') {
+        $url = wc_get_checkout_url();
+    }
+    return $url;
+}
+
+add_filter('woocommerce_add_to_cart_redirect', 'gi_add_to_cart_redirect');
+
+
+//GID-1200
+add_filter('woocommerce_get_price_html', 'add_price_suffix', 100);
+add_filter('woocommerce_cart_item_price', 'add_price_suffix', 100);
+function add_price_suffix($price)
+{
+
+    if (!$price) {
+        return '';
+    }
+
+    global $product;
+
+    // remove the price per 100 units when product is surface equipment
+    $is_surface_equipment = gi_product_has_surface_equipment($product->get_id());
+    if($is_surface_equipment)
+    {
+        if((float) substr($price,5)) return substr($price,5)/100;
+        return '';
+    }
+
+    $suffix = ' (price per 100 pieces rounded to two decimal places)';
+    return $price . $suffix;
+}
+
+
+// GID-1221
+add_action('woocommerce_add_to_cart', 'remove_same_product_before_add_to_cart', 10, 6);
+function remove_same_product_before_add_to_cart($cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data)
+{
+    $cart = WC()->cart->get_cart();
+    $count_found = 0;
+    $remove_key = '';
+    foreach ($cart as $key => $item) {
+        if ($item['product_id'] == $product_id) {
+            if (!$remove_key) {
+                $remove_key = $key;
+            }
+            $count_found++;
+            if ($count_found > 1) {
+                WC()->cart->remove_cart_item($remove_key);
+                $count_found = 0;
+                $remove_key = '';
+            }
+        }
+    }
+}
+
+add_filter( 'woocommerce_add_to_cart_validation', 'check_cart_product_category', 99, 5 );
+function check_cart_product_category( $passed, $product_id, $quantity, $variation_id = 0, $variations = null ) {
+    if ( ! $passed ) return false;
+
+	if ( WC()->cart->is_empty() ) {
+		return true;
+	}
+
+    //unset the notice about taxjar
+    WC()->session->__unset('gi_taxjar_notice_shown');
+
+    $current_terms = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'ids' ) );
+
+    $cart = WC()->cart->get_cart();
+
+    foreach ( $cart as $cart_item ) {
+        $existing_product_id = $cart_item['product_id'];
+        $existing_terms = wp_get_post_terms( $existing_product_id, 'product_cat', array( 'fields' => 'ids' ) );
+
+        $common_terms = array_intersect( $current_terms, $existing_terms );
+        if ( empty( $common_terms ) ) {
+            wc_add_notice( __( 'You can only buy products on O-Rings or Surface Equipment type.', 'cabling' ), 'error' );
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+// Function to add custom tax to cart
+function add_custom_tax_fee() {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+        return;
+    }
+    $cart = WC()->cart;
+	if( is_cart() || is_checkout() ){
+		// Remove Handling Fee
+		foreach ( $cart->get_fees() as $key => $fee ) {
+			if ( $fee->name === __('Minimum Order Fee', 'webstore') ) {
+				unset( WC()->cart->fees_api()->get_fees()[ $key ] );
+			}
+            if ( $fee->name === __('Minimum Order Fee Tax', 'webstore') ) {
+				unset( WC()->cart->fees_api()->get_fees()[ $key ] );
+			}
+		}
+	}
+	// if( is_cart() || is_checkout() ){
+	if( is_checkout() ){
+		if( !empty($_SESSION['handling_fee']) ){
+			$cart->add_fee(__('Minimum Order Fee', 'webstore'), $_SESSION['handling_fee']);
+		}
+        if( !empty($_SESSION['handling_fee_tax']) ){
+	        if( isApplyTax() ){
+                $cart->add_fee(__('Minimum Order Fee Tax', 'webstore'), $_SESSION['handling_fee_tax']);
+            }
+		}
+	}
+    // Remove tax at cart page
+    if (is_cart()) {
+        WC()->customer->set_is_vat_exempt( true );
+    }
+    if (is_checkout()) {
+        WC()->customer->set_is_vat_exempt( false );
+    }
+
+	if( is_cart() ){
+		$min_price = get_field('min_price','option');
+		$handling_fee = 0;
+//        $isCheckedFee = false;
+		foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
+			if ( $isCheckedFee || gi_product_has_surface_equipment( $cart_item['product_id'] ) ) {
+				$isCheckedFee = true;
+                continue;
+			}
+			$sub_subtotal = $cart_item['line_total'];
+			if( $sub_subtotal < $min_price ){
+				$handling_fee += $min_price - $sub_subtotal;
+			}
+		}
+		if($handling_fee){
+			$cart->add_fee(__('Minimum Order Fee', 'webstore'),$handling_fee);
+		}
+	}
+}
+
+add_action('woocommerce_cart_calculate_fees', 'add_custom_tax_fee',999);
+
+/**
+ * check if a user has Tax
+ *
+ * @param int $id
+ *
+ * @return bool
+ */
+function isApplyTax( int $id = 0): bool {
+	$user_id = empty($id) ? get_current_user_id() : $id;
+	if ( empty($user_id) ) {
+		return true;
+	}
+	$user_wp9_form            = get_user_meta( $user_id, 'user_wp9_form', true );
+	$user_certificate_form    = get_user_meta( $user_id, 'user_certificate_form', true );
+	$customer_level           = get_customer_level( $user_id );
+
+	return ($customer_level == 1) && (empty($user_wp9_form) || empty($user_certificate_form));
+}
+
+
+//JM changed woocimerce filter to display a different product name when adding to cart
+add_filter( 'wc_add_to_cart_message_html', 'wc_add_to_cart_message_custom',10,2);
+function wc_add_to_cart_message_custom( $message, $products ) {
+    $titles = array();
+    $count  = 0;
+    $show_qty =true;
+
+    if ( ! is_array( $products ) ) {
+        $products = array( $products => 1 );
+        $show_qty = false;
+    }
+
+    if ( ! $show_qty ) {
+        $products = array_fill_keys( array_keys( $products ), 1 );
+    }
+
+    foreach ( $products as $product_id => $qty ) {
+        $titles[]=getCustomProductDisplayName($product_id);
+        $count   += $qty;
+    }
+
+
+    $titles = array_filter( $titles );
+    /* translators: %s: product name */
+
+	return sprintf( _n( '%s has been added to your cart.', '%s have been added to your cart.', $count, 'woocommerce' ),
+        wc_format_list_of_items( $titles )
+         );
+
+}
+
+//JM change woocommerce filter for product display name when removing an item from cart
+add_filter( 'woocommerce_cart_item_removed_title', 'removed_from_cart_title', 10, 2);
+function removed_from_cart_title( $message, $cart_item ) {
+    $message=getCustomProductDisplayName($cart_item['product_id']);
+    return $message;
+}
+
+
+/************* REMOVE SHIPPING FROM CART ***********************/
+function disable_shipping_calc_on_cart( $show_shipping ) {
+    if( !is_checkout()){// is_cart() ) {
+        return false;
+    }
+    return $show_shipping;
+}
+add_filter( 'woocommerce_cart_ready_to_calc_shipping', 'disable_shipping_calc_on_cart', 99 );
+
+
+//JM Action to display notice when cart qty is updated due to minimum restrictions
+add_action('showUpdateQtyNotice','addQtyUpdatedNotice',10,1);
+function addQtyUpdatedNotice($productlist){
+    $titles=array();
+    if ( ! is_array( $productlist ) ) {
+        $productlist = array( $productlist => 1 );
+    }
+    foreach($productlist as $product)
+    {
+        $titles[]=getCustomProductDisplayName($product);
+    }
+    wc_add_notice(__('Minimum purchase quantity for following product/products is changed : ' . wc_format_list_of_items( $titles )
+        , 'customer-specific-pricing-for-woocommerce'), 'notice');
+}
+
+function getCustomProductDisplayName($product_id)
+{
+    $is_surface_equipment = gi_product_has_surface_equipment($product_id);
+    if ($is_surface_equipment) {
+	    $customname =  get_the_title( $product_id );
+    } else {
+		$dynamic_fields = get_field( 'product_dynamic_fields', $product_id );
+		//o-ring standard
+		$o_ring_standard_value = '';
+		if ( ! empty( $dynamic_fields ) ) {
+			$o_ring_standard_index = array_search( 'O-RING SIZE STANDARD', array_column( $dynamic_fields, 'label' ) );
+			if ( $o_ring_standard_index !== false ) {
+				$o_ring_standard_value = $dynamic_fields[ $o_ring_standard_index ]['value'];
+			}
+		}
+		$product_material = get_post_meta( $product_id, 'product_material', true );
+		$product_material = $product_material ? get_post_field( 'post_title', $product_material ) : '';
+
+		$product_dash_number = get_post_meta( $product_id, 'product_dash_number', true );
+		$product_dash_number = str_replace( 'AS', '', $product_dash_number );
+		$product_dash_number = $o_ring_standard_value ? $o_ring_standard_value . '-' . $product_dash_number : $product_dash_number;
+
+		$product_hardness = get_post_meta( $product_id, 'product_hardness', true );
+
+		$customname = $product_material . " " . $product_hardness . " " . $product_dash_number;
+	}
+    return $customname;
+}
+
+// GID-1249
+add_filter('wc_add_to_cart_message_html', 'custom_add_to_cart_message', 10, 2);
+function custom_add_to_cart_message($message, $products)
+{
+    $continue_shopping_url = get_field('buy_online_link', 'option');
+    $continue_button = '<a href="' . esc_url($continue_shopping_url) . '" class="ml-2 button wc-forward">' . __('Continue Shopping', 'woocommerce') . '</a>';
+    if ('yes' != get_option('woocommerce_cart_redirect_after_add')) {
+        $message .= $continue_button;
+    }
+    return $message;
+}
+
+add_filter('woocommerce_continue_shopping_redirect', 'gi_continue_shopping_redirect');
+function gi_continue_shopping_redirect($redirect_url)
+{
+    $continue_shopping_url = get_field('buy_online_link', 'option');
+    return $continue_shopping_url;
+}
