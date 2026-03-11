@@ -1,0 +1,27 @@
+===============Prod crons as below======================
+
+25 11 * * * python3 /home/datext_infola_jos/python-new/import_pim_server.py
+
+#31 15 * * * python3 /home/datext_infola_jos/python-new/import_pim_server.py
+# >> /home/datext_infola_jos/pythonlog.txt 2>&1
+
+0 5 * * * python3  /home/datext_infola_jos/python-new/MovePricesFromSTGToProd_DEV.py
+
+*/5 * * * * wget -q -O - https://localhost/wp-cron.php?doing_wp_cron >/dev/null 2>&1
+
+===============giqa crons as below======================
+
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+#
+# For more information see the manual pages of crontab(5) and cron(8)
+#
+# m h  dom mon dow   command
+#5 * * * * python3 /home/datext_infola_jos/python/import_pim_server.py
+#* * * * * python3 /home/datext_infola_jos/python/import_pim_server.py
+# >> /home/datext_infola_jos/pythonlog.txt 2>&1
+30 22 * * * python3 /home/datext_infola_jos/python/import_pim_server.py  >> /home/datext_infola_jos/pythonlog.txt 2>&1
+1 15 * * * python3 /home/datext_infola_jos/python/MovePricesFromSTGToProd.py
+44 17 * * * python3 /home/datext_infola_jos/python-prod/import_pim_server.py  >> /home/datext_infola_jos/python-prodlog.txt 2>&1
+10 * * * * python3 /home/datext_infola_jos/python-prod/import_invoices.py
+ 
