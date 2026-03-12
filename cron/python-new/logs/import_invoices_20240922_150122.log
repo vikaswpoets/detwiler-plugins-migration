@@ -1,0 +1,2 @@
+Integration start 2024-09-22 15:01:22.528342
+2024-09-22 15:01:22.546175 Failed syncing invoices: 2003 (HY000): Can't connect to MySQL server on '10.169.1.152:3306' (111)

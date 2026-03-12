@@ -1,0 +1,5 @@
+Integration start 2024-11-11 18:53:25.567000
+2024-11-11 18:53:26.843732 Failed syncing invoices: 1370 (42000): execute command denied to user 'giprod'@'localhost' for routine 'import_gi_prod.sp_SyncInvoices'
+2024-11-11 18:53:26.844519 "closed connection to staging db"
+2024-11-11 18:53:26.845642 "closed connection to import db"
+Integration Done 2024-11-11 18:53:26.845726

@@ -1,0 +1,5 @@
+Integration start 2024-11-11 18:49:00.535400
+2024-11-11 18:49:02.036675 Failed syncing invoices: 1318 (42000): Incorrect number of arguments for PROCEDURE import_gi_prod.sp_SyncInvoices; expected 0, got 1
+2024-11-11 18:49:02.037454 "closed connection to staging db"
+2024-11-11 18:49:02.037773 "closed connection to import db"
+Integration Done 2024-11-11 18:49:02.037847
