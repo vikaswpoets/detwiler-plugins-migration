@@ -59,11 +59,41 @@ ftp_path_images="/var/www/pim-gi/storage/app/public/productfiles/"
 ##
 #       Write to file
 ##
+## Counters for summary
+stats = {
+    "products_total": 0,
+    "products_success": 0,
+    "products_failed": 0,
+    "files_copied": 0,
+    "files_failed": 0,
+    "sp_success": 0,
+    "sp_failed": 0,
+    "failed_products": [],
+    "failed_files": []
+}
+
 def writeToFile(text):
 	filename = LOG_FILE
 	f = open( filename, "a", encoding='utf-8')
 	f.write(text + "\n")
 	f.close()
+
+def logSummary():
+    writeToFile('\n' + '='*60)
+    writeToFile('INTEGRATION SUMMARY')
+    writeToFile('='*60)
+    writeToFile(f'  Total Products Processed : {stats["products_total"]}')
+    writeToFile(f'  Products Imported OK     : {stats["products_success"]}')
+    writeToFile(f'  Products Failed          : {stats["products_failed"]}')
+    writeToFile(f'  Files Copied OK          : {stats["files_copied"]}')
+    writeToFile(f'  Files Copy Failed        : {stats["files_failed"]}')
+    writeToFile(f'  SP Executions OK         : {stats["sp_success"]}')
+    writeToFile(f'  SP Executions Failed     : {stats["sp_failed"]}')
+    if stats["failed_products"]:
+        writeToFile(f'\n  Failed Product IDs: {", ".join(str(p) for p in stats["failed_products"])}')
+    if stats["failed_files"]:
+        writeToFile(f'  Failed Files: {", ".join(stats["failed_files"])}')
+    writeToFile('='*60 + '\n')
 
 def getLastUpdateDate():
     mydb = mysql.connector.connect(host=host,user=dbuser,password=dbpass,database=database)
@@ -130,38 +160,46 @@ def importPim():
         writeToFile(str(datetime.datetime.now())+' "Failed loading list: "')
         list=json.loads(getJsonFomPim(pimaddresslist))
         
-    for prod in list :
+    writeToFile(str(datetime.datetime.now())+f' Found {len(list)} products to process')
+    stats["products_total"] = len(list)
+
+    for idx, prod in enumerate(list, 1):
+        writeToFile(str(datetime.datetime.now())+f' [{idx}/{len(list)}] Processing product ID: {prod}')
         #get product json
         print("%s%s%s"%(pimproductddress, prod,token))
-        
-        #print(productjson);
+
         #write product json to database
         try:
             productjson= getJsonFomPim("%s%s%s"%(pimproductddress, prod,token))
             # try again in case it failed
-            try: 
+            try:
                 json.loads(productjson)
             except:
-                writeToFile(str(datetime.datetime.now())+' "Failed loading retrieving: "'+"%s%s%s"%(pimproductddress, prod,token))
+                writeToFile(str(datetime.datetime.now())+f' [RETRY] Product {prod} - JSON parse failed, retrying API call')
                 productjson= getJsonFomPim("%s%s%s"%(pimproductddress, prod,token))
-            
-            
+
+
             mydb = mysql.connector.connect(host=host,user=dbuser,password=dbpass,database=database)
             mycursor = mydb.cursor()
-            
-            writeToFile(str(datetime.datetime.now())+' "Inserting pim data into staging area"')
+
             mycursor.execute("insert into import values(now(),'"+mydb._cmysql.escape_string(productjson).decode("utf-8")+"')");
             mydb.commit()
-            writeToFile(str(datetime.datetime.now())+' "Finished pim data into staging area"')
-        
+            stats["products_success"] += 1
+            writeToFile(str(datetime.datetime.now())+f' [SUCCESS] Product {prod} imported into staging')
+
         except mysql.connector.Error as e:
-            writeToFile(str(datetime.datetime.now())+" Error Inserting pim data into staging area: "+ e)
+            stats["products_failed"] += 1
+            stats["failed_products"].append(prod)
+            writeToFile(str(datetime.datetime.now())+f' [FAILED] Product {prod} - DB Error: {str(e)}')
             print(str(datetime.datetime.now())+" Error Inserting pim data into staging area: ", e)
+        except Exception as e:
+            stats["products_failed"] += 1
+            stats["failed_products"].append(prod)
+            writeToFile(str(datetime.datetime.now())+f' [FAILED] Product {prod} - Error: {str(e)}')
         finally:
             if mydb.is_connected():
                 mydb.close()
                 mycursor.close()
-                writeToFile(str(datetime.datetime.now())+' "closed connection for inserting data into staging"')
         importData()
         copyFiles()
 
@@ -201,21 +239,19 @@ def importData():
 
         mycursor = mydb.cursor()
 
-        writeToFile(str(datetime.datetime.now())+' "Executing  sp_migrate_data_from_pim_v10"')
-        writeToFile(str(datetime.datetime.now())+' "Executing  sp_migrate_data_from_pim_v10"')
-        #result_args = mycursor.callproc("sp_migrate_data_from_pim_v10", args=(1,0))
+        writeToFile(str(datetime.datetime.now())+' [SP] Executing sp_migrate_data_from_pim_v11...')
         result_args = mycursor.callproc("sp_migrate_data_from_pim_v11", [0,])
         mydb.commit()
-        writeToFile(str(datetime.datetime.now())+' "finished  sp_migrate_data_from_pim_v11"')
-        
+        stats["sp_success"] += 1
+        writeToFile(str(datetime.datetime.now())+' [SP] sp_migrate_data_from_pim_v11 completed successfully')
+
     except mysql.connector.Error as e:
-        writeToFile(str(datetime.datetime.now())+" Error executing sp_migrate_data_from_pim_v11: "+ e)
-        #print("Error executing sp_migrate_data_from_pim_v10: ", e)
+        stats["sp_failed"] += 1
+        writeToFile(str(datetime.datetime.now())+f' [SP FAILED] sp_migrate_data_from_pim_v11 Error: {str(e)}')
     finally:
         if mydb.is_connected():
             mydb.close()
             mycursor.close()
-            writeToFile(str(datetime.datetime.now())+' "closed connection for stored proc"')
 
 
 
@@ -234,27 +270,31 @@ def getFile(file,sourcepath,destiny):
 def copyFileFromFTP(file):  #copyFileFromFTP
 
     try:
-        print(str(datetime.datetime.now())+" Copying file: ", file)
         cnopts = pysftp.CnOpts()
         cnopts.hostkeys = None
-        
+
         global sftp
         sftp = pysftp.Connection(ftp_host , username=ft_user, password=ft_pass, cnopts=cnopts)
 
         getFile(file,ftp_path_thumb,Targetpath+file)
-    except Exception  as e:    
-#        sftp.close()
+        stats["files_copied"] += 1
+        writeToFile(str(datetime.datetime.now())+f' [FILE OK] Copied thumbnail: {file}')
+    except Exception  as e:
         try:
             getFile(file,ftp_path_images,Targetpath+file)
-            print (str(datetime.datetime.now())+" Copied image file: ", file)
+            stats["files_copied"] += 1
+            writeToFile(str(datetime.datetime.now())+f' [FILE OK] Copied image: {file}')
         except :
             try:
                 getFile(file,ftp_path_files,Targetpath+file)
-                print (str(datetime.datetime.now())+" Copied file: ", file)
+                stats["files_copied"] += 1
+                writeToFile(str(datetime.datetime.now())+f' [FILE OK] Copied document: {file}')
             except:
-                print (str(datetime.datetime.now())+" Error Copying file: ", file)
+                stats["files_failed"] += 1
+                stats["failed_files"].append(file)
+                writeToFile(str(datetime.datetime.now())+f' [FILE FAILED] Could not copy: {file} - {str(e)}')
                 traceback.print_exc()
-        
+
         sftp.close()
        
 
@@ -323,13 +363,16 @@ def setFinishProcessPim():
 # MAIN
 ######
 if __name__ == '__main__':
-    #touch LOG_FILE
-    writeToFile('Integration start '+str(datetime.datetime.now()))
-#    importRegions()
+    writeToFile('='*60)
+    writeToFile('PIM PRODUCT IMPORT - Integration start '+str(datetime.datetime.now()))
+    writeToFile('='*60)
+    writeToFile(f'  Database: {database} @ {host}')
+    writeToFile(f'  Target Path: {Targetpath}')
+    writeToFile(f'  PIM Server: {ftp_host}')
+    writeToFile('-'*60)
     importPim()
-	#getNewDataFomPim()
-	#importData()
-	#copyFiles()
     setFinishProcessPim()
+    writeToFile(str(datetime.datetime.now())+' PIM sync finish endpoint called')
+    logSummary()
     writeToFile('Integration Done '+str(datetime.datetime.now()))
     
