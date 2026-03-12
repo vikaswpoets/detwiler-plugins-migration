@@ -371,7 +371,7 @@ if __name__ == '__main__':
     writeToFile(f'  PIM Server: {ftp_host}')
     writeToFile('-'*60)
     importPim()
-    setFinishProcessPim()
+    #setFinishProcessPim()
     writeToFile(str(datetime.datetime.now())+' PIM sync finish endpoint called')
     logSummary()
     writeToFile('Integration Done '+str(datetime.datetime.now()))
