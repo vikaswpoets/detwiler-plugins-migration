@@ -108,11 +108,11 @@ def getLastUpdateDate():
 
 
 #pimaddresslist="http://10.169.28.244/api/getProductListToJson/"+getLastUpdateDate()+"/?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
-pimaddresslist="http://10.169.25.226/api/getProductListToJsonFromSyncOnDemand/?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
-pimaddressfinish="http://10.169.25.226/api/setsyncTableDone?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
-pimproductddress="http://10.169.25.226/api/getProductToJson/"
-pimaddress="http://10.169.25.226/api/exporttojson?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
-regionsaddress="http://10.169.25.226/api/getRegionsToJson?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
+pimaddresslist="http://10.169.1.152/api/getProductListToJsonFromSyncOnDemand/?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
+pimaddressfinish="http://10.169.1.152/api/setsyncTableDone?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
+pimproductddress="http://10.169.1.152/api/getProductToJson/"
+pimaddress="http://10.169.1.152/api/exporttojson?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
+regionsaddress="http://10.169.1.152/api/getRegionsToJson?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
 token="?api_token=OTrUdp7VCLTSKdqS3Mh2gHKJkCHtZznynDfGp7fgBaPXc1ZEmdEed1U4xwmt"
 
 def getJsonFomPim(address):
