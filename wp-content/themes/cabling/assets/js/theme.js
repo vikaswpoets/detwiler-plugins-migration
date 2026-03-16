@@ -489,6 +489,35 @@ function cabling_search_ajax(ajaxSearch, paged = 1) {
         return false;
     })
 
+    // Hide empty columns in product variation tables
+    $(".product-variation-table").each(function () {
+        const $table = $(this);
+        const $rows = $table.find("tr");
+        if ($rows.length === 0) return;
+
+        const columnCount = $rows.first().find("td, th").length;
+
+        for (let colIndex = columnCount - 1; colIndex >= 0; colIndex--) {
+            let shouldHide = true;
+
+            $rows.slice(1).each(function () { // Skip header row
+                const $cell = $(this).find("td, th").eq(colIndex);
+                const text = $cell.text().trim();
+                if (text && text !== "*") {
+                    shouldHide = false;
+                    return false; // break out of .each()
+                }
+            });
+
+            if (shouldHide) {
+                $rows.each(function () {
+                    const $cell = $(this).find("td, th").eq(colIndex);
+                    $cell.hide();
+                });
+            }
+        }
+    });
+
 })(jQuery);
 
 //navigation

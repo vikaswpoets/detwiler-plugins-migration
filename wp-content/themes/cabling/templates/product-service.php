@@ -20,17 +20,9 @@ if (!empty($history['group-type'])) {
     $group = $history['group-type'];
     $field = 'term_id';
 }
-if ($group) {
-    $product_group = get_term_by($field, $group, 'product_group');
-    if ($product_group) {
-        $product_lines = get_product_line_category('product_line', 'group_category', [$product_group->term_id]);
-        $class = "has-group group-{$product_group->term_id}";
-    }
-}
-
-$product_cats = get_product_line_category('product_group', 'family_category', ['8626']);
-if (empty($product_lines) && empty($product_group)) {
-    $product_lines = get_product_category('product_line');
+$product_group = get_term_by( $field, $group, 'product_group' );
+if ( $product_group ) {
+	$class = "has-group group-{$product_group->term_id}";
 }
 
 get_header();
@@ -41,15 +33,17 @@ get_header();
                 <div class="row">
                     <div class="col col-xs-12 col-lg-3">
                         <div class="woo-sidebar">
-                            <?php get_template_part('template-parts/filter', 'product', ['categories' => $product_cats, 'product_cat' => $product_group]) ?>
+                            <?php get_template_part('template-parts/filter', 'product', [
+                                    'product_group' => $product_group,
+                                    'history' => $history,
+                            ]) ?>
                         </div>
                     </div>
-                    
                     <div class="col-sm-12 col-lg-9">
                         <?php get_template_part('template-parts/filter_heading', 'product') ?>
                         <div id="filtered-category-container">
-                            <?php if (isset($product_lines)): ?>
-                                <?php foreach ($product_lines as $line) {
+                            <?php /*if (isset($product_lines)): */?><!--
+                                <?php /*foreach ($product_lines as $line) {
                                     //$children = get_product_type_category($line->term_id);
                                     $productTypes = get_product_line_category('product_custom_type', 'product_line', [$line->term_id]);
 
@@ -57,8 +51,8 @@ get_header();
                                         'category' => $line,
                                         'children' => $productTypes,
                                     ]);
-                                } ?>
-                            <?php endif ?>
+                                } */?>
+                            --><?php /*endif */?>
                         </div>
                         <div id="filtered-results-container"></div>
 

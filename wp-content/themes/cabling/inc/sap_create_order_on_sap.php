@@ -62,8 +62,9 @@ function sap_create_order_on_sap($order_id,$order){
     //$carrier_id = isset($_SESSION['carrier_id']) ? $_SESSION['carrier_id'] : '';
     $user_id    = get_current_user_id();
     $user_plant = get_user_meta($user_id, 'sales_org', true);
-//    $user_plant = $user_plant ? $user_plant : '2130';
-$user_plant = $user_plant ? $user_plant : '2141';
+    //$user_plant = $user_plant ? $user_plant : '2130';
+	$user_plant = $user_plant ? $user_plant : '2141';
+    //$user_plant = '2130';
     $sap_no     = get_user_meta($user_id, 'sap_customer', true);
     $sap_no = $sap_no ? $sap_no : '1024495';
     if ($sap_no=='1024495'){
@@ -155,7 +156,7 @@ $user_plant = $user_plant ? $user_plant : '2141';
     );
 
 
-    if($customer_level == 1){
+    //if($customer_level == 1){
         //Send email and language
         $current_user = wp_get_current_user();
 
@@ -167,13 +168,17 @@ $user_plant = $user_plant ? $user_plant : '2141';
                 "TEXT_LINE"=> $current_user->user_email
             ]
         ];
-    }
+    //}
     // add Customer Reference with order number in our system
 
     $i = 1;
     $order_items = [];
+    $productId = 0;
     foreach ($order->get_items() as $item_id => $item) {
         $product = $item->get_product();
+        if (empty($productId)){
+            $productId = $product->get_id();
+        }
         $payload['root']['ORDER_ITEMS_IN'][] = [
             "ITM_NUMBER" => sprintf("%06d", $i*10),
             //"MATERIAL" => $product->get_sku(),
@@ -190,6 +195,11 @@ $user_plant = $user_plant ? $user_plant : '2141';
         $i++;
     }
 
+    //When the product selected is from double E, the requests to SAP must go with the sales organization 2142
+	if(gi_product_has_surface_equipment($productId)){
+		$payload["root"]["ORDER_HEADER_IN"]["SALES_ORG"] = "2142";
+	}
+
     //Add Material handling fee
     if ($_SESSION['handling_fee'] ){
     // Last one is for handling fee
@@ -202,14 +212,14 @@ $user_plant = $user_plant ? $user_plant : '2141';
         $payload['root']['ORDER_SCHEDULES_IN'][] = [
             "ITM_NUMBER" => sprintf("%06d", $i*10),
             'REQ_QTY' => 1,
-        ];    
+        ];
 }
     // If only 1 item, not use multi array
     if( count($order->get_items()) == 1 && (!$_SESSION['handling_fee'] || empty($_SESSION['handling_fee'])) ){
         $payload['root']['ORDER_ITEMS_IN'] = $payload['root']['ORDER_ITEMS_IN'][0];
         $payload['root']['ORDER_SCHEDULES_IN'] = $payload['root']['ORDER_SCHEDULES_IN'][0];
     }
-	
+
     // Shipping fee
     $shipping_fee = $order->get_shipping_total();
     //Freight cost value (system is multiplying the value 10x, so please send the value/10)
@@ -246,20 +256,23 @@ $user_plant = $user_plant ? $user_plant : '2141';
         ];
     }
     */
+    //print_r(json_encode($payload));
 
     $response = $GIWebServices->makeApiRequest('CREATE/SALESORDER', [],$payload);
+    //print_r(json_encode($response));
+
     if (is_array($response) && count($response) > 0) {
         $response = array_values($response);
         if (isset($response[0]['SALESDOCUMENT']) && $response[0]['SALESDOCUMENT']>0) {
             $sap_order_id = $response[0]['SALESDOCUMENT'];
-            update_post_meta($order_id,'sap_order_id',$sap_order_id);        
+            update_post_meta($order_id,'sap_order_id',$sap_order_id);
         }else
         {
-            send_notify_error('Datwyler Sealing: Failed to Create Order on SAP from website. No Document Id', json_encode($payload),'sap');    
+            send_notify_error('Datwyler Sealing: Failed to Create Order on SAP from website. No Document Id', json_encode($payload),'sap');
         }
     }else
     {
-        send_notify_error('Datwyler Sealing: Failed to Create Order on SAP from website', json_encode($payload),'sap');    
+        send_notify_error('Datwyler Sealing: Failed to Create Order on SAP from website', json_encode($payload),'sap');
     }
 }
 
@@ -293,7 +306,7 @@ function display_sap_order_id_on_order_page($order) {
         </ul>
         <?php
         echo ob_get_clean();
-    }    
+    }
 }
 
 // For order emails:

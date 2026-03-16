@@ -17,9 +17,7 @@ add_action('init', function () {
 function cabling_woocommerce_setup()
 {
     add_theme_support('woocommerce');
-    //add_theme_support( 'wc-product-gallery-zoom' );
-    add_theme_support('wc-product-gallery-lightbox');
-    add_theme_support('wc-product-gallery-slider');
+    add_theme_support( 'wc-product-gallery-slider' );
 }
 
 add_action('after_setup_theme', 'cabling_woocommerce_setup');
@@ -139,13 +137,8 @@ if (!function_exists('cabling_woocommerce_product_columns_wrapper')) {
      */
     function cabling_woocommerce_product_columns_wrapper()
     {
-        if ('Grid' === get_field('_woo_product_list', 'option'))
-            $product_class = ' product-grid ';
-        else
-            $product_class = ' product-list ';
-
         $columns = cabling_woocommerce_loop_columns();
-        echo '<div class="columns-' . absint($columns) . $product_class . '">';
+        echo '<div class="columns-' . absint($columns) . '">';
     }
 }
 add_action('woocommerce_before_shop_loop', 'cabling_woocommerce_product_columns_wrapper', 40);
@@ -195,10 +188,14 @@ function cabling_woocommerce_wrapper_before()
 add_action('woocommerce_before_main_content', 'cabling_woocommerce_wrapper_before');
 function cabling_woocommerce_after_main_content()
 {
-    if (is_tax('product_cat') || is_tax('compound_cat') || is_product()) {
+    if (is_tax('product_cat') || is_tax('compound_cat') ) {
         cabling_add_quote_section();
     }
+}
 
+add_action('woocommerce_after_shop_loop', 'gi_related_complementary_section');
+function gi_related_complementary_section()
+{
     if (is_tax('product_custom_type')) {
         cabling_related_complementary_section();
     }
@@ -321,11 +318,11 @@ function cabling_woocommerce_breadcrumb()
     if (is_shop()) return;
     $link = home_url('/products-and-services/');
     if (is_product() && isset($_REQUEST['data-history'])) {
-        $link = base64_decode($_REQUEST['data-history']);
         if (isset($_REQUEST['product-type'])) {
             $product_type = $_REQUEST['product-type'];
-            $link = '/product-type/' . $product_type . '/?data-filter=' . $_REQUEST['data-history'];
-            $link = home_url($link);
+            $link = add_query_arg('data-filter', $_REQUEST['data-history'], get_term_link($product_type, 'product_custom_type'));
+        } else {
+            $link = add_query_arg('data-history', $_REQUEST['data-history'], $link);
         }
     } elseif (is_tax('product_custom_type')) {
         $link = get_product_filter_link(true);
@@ -360,39 +357,13 @@ function cabling_woocommerce_breadcrumb_back_button()
 }
 
 
-function get_customer_level($userId): int
-{
-    $level = 1;
-    $has_approved = get_user_meta($userId, 'has_approve', true);
-    $customer_level = get_user_meta($userId, 'customer_level', true);
-    if ('true' == $has_approved || $customer_level === '2')
-        $level = 2;
-    return $level;
-}
+// Function get_customer_level() moved to inc/gi-customer.php
 
-function get_master_account_id($userId): string
-{
-    $customer_parent = get_user_meta($userId, 'customer_parent', true);
+// Function get_master_account_id() moved to inc/gi-customer.php
 
-    return $customer_parent ?: $userId;
-}
+// Function get_customer_type() moved to inc/gi-customer.php
 
-function get_customer_type($userId): string
-{
-    $type = CHILD_ACCOUNT;
-    $customer_parent = get_user_meta($userId, 'customer_parent', true);
-    if (empty($customer_parent))
-        $type = MASTER_ACCOUNT;
-
-    return $type;
-}
-
-function get_customer_type_label($user_id): string
-{
-    $customer_type = get_customer_type($user_id);
-
-    return $customer_type === MASTER_ACCOUNT ? 'Master Account' : 'Child Account';
-}
+// Function get_customer_type_label() moved to inc/gi-customer.php
 
 /**
  * Account menu Customer
@@ -445,65 +416,9 @@ function endArray($array)
     return end($array);
 }
 
-function get_cumulative_quantity($stock, float $quantity): string
-{
-    if (empty($stock)) {
-        $stock = 0;
-    }
-    $qty = $stock + $quantity;
-    return $qty;
-    //return number_format($qty, 0, '.', ' ');
-}
+// Function get_cumulative_quantity() moved to inc/ga_crm.php
 
-function show_value_from_api($key, $value)
-{
-    if (empty($value)) {
-        return '-';
-    }
-
-    if ($key === 'ScaleTo' && $value == '999999.00') {
-        return '-';
-    }
-
-    $numberKeys = array(
-        'OpenConfdDelivQtyInBaseUnit',
-        'StockQuantity',
-        'ScaleFrom',
-        'ScaleTo',
-        'OrderQuantity',
-        'OpenConfdDelivQtyInBaseUnit',
-    );
-
-    if (in_array($key, $numberKeys)) {
-        return number_format($value, 0, '.', ' ');
-    }
-
-    if ($key === 'RemainingValue') {
-        return number_format($value, 2, '.', ' ');
-    }
-
-    if (str_contains($key, 'CureDate')) {
-        return $value;
-    }
-
-    if (str_contains($key, 'Date')) {
-        $dateTime = new DateTime($value);
-
-        return $dateTime->format("m/d/Y");
-    }
-
-    $priceKeys = array(
-        'NetPriceAmount',
-        'ScalePrice',
-        'MinPrice',
-    );
-
-    if (in_array($key, $priceKeys)) {
-        return '$' . number_format($value, 2, '.', ' ');
-    }
-
-    return $value;
-}
+// Function show_value_from_api() moved to inc/ga_crm.php
 
 /**
  * Add Customer endpoint
@@ -611,80 +526,15 @@ function cabling_customer_service_endpoint_content()
 add_action('woocommerce_account_customer-service_endpoint', 'cabling_customer_service_endpoint_content');
 
 
-function cabling_get_user_by_customer($user_id)
-{
-    $args = array(
-        'role' => 'customer',
-        'meta_key' => 'customer_parent',
-        'meta_value' => $user_id,
-        'meta_compare' => '=',
-    );
-    return get_users($args);
-}
+// Function cabling_get_user_by_customer() moved to inc/gi-customer.php
 
 //Custom check-out field
-add_filter('woocommerce_checkout_fields', 'cabling_custom_override_checkout_fields');
-function cabling_custom_override_checkout_fields($fields)
-{
-    $fields['billing']['billing_address_1']['label'] = __('Address Line 1', 'cabling');
-    $fields['billing']['billing_address_1']['class'] = array('form-row-first');
-
-    $fields['billing']['billing_address_2']['class'] = array('form-row-last');
-    $fields['billing']['billing_address_2']['label'] = __('Address Line 2', 'cabling');
-
-    $fields['billing']['billing_city']['label'] = __('City', 'cabling');
-    $fields['billing']['billing_city']['class'] = array('form-row-last');
-
-    $fields['billing']['billing_postcode']['label'] = __('Postcode', 'cabling');
-    $fields['billing']['billing_postcode']['required'] = true;
-    $fields['billing']['billing_postcode']['class'] = array('form-row-first');
-
-    $fields['billing']['billing_company']['label'] = __('Company', 'cabling');
-    $fields['billing']['billing_company']['required'] = true;
-    $fields['billing']['billing_company']['class'] = array('form-row-first');
-
-    unset($fields['billing']['billing_country']);
-    unset($fields['billing']['billing_state']);
-    unset($fields['billing']['billing_email']);
-    unset($fields['billing']['billing_phone']);
-
-    return $fields;
-}
+// Function cabling_custom_override_checkout_fields() moved to inc/product/checkout.php
 
 //add Company Responsible Full Name field to billing address
-add_filter('woocommerce_billing_fields', 'cabling_woocommerce_billing_fields');
-function cabling_woocommerce_billing_fields($fields)
-{
-    $fields['company_vat'] = array(
-        'label' => __('VAT Number', 'cabling'),
-        'placeholder' => _x('VAT Number', 'placeholder', 'cabling'),
-        'required' => false,
-        'clear' => false,
-        'type' => 'text',
-        'class' => array('form-row-last'),
-        'priority' => 36
-    );
+// Function cabling_woocommerce_billing_fields() moved to inc/product/checkout.php
 
-    return $fields;
-}
-
-add_filter('woocommerce_shipping_fields', 'cabling_woocommerce_shipping_fields');
-function cabling_woocommerce_shipping_fields($fields)
-{
-    //var_dump($fields);
-    $fields['shipping_address_1']['label'] = __('Address Line 1', 'cabling');
-    $fields['shipping_address_2']['label'] = __('Address Line 2', 'cabling');
-
-    $fields['shipping_city']['label'] = __('City', 'cabling');
-
-    $fields['shipping_postcode']['label'] = __('Postcode', 'cabling');
-    //$fields['shipping_postcode']['required'] = true;
-
-    $fields['shipping_company']['label'] = __('Company', 'cabling');
-    $fields['shipping_company']['required'] = true;
-
-    return $fields;
-}
+// Function cabling_woocommerce_shipping_fields() moved to inc/product/checkout.php
 
 //Archive Sidebar
 function product_widgets_init()
@@ -734,40 +584,9 @@ remove_action('woocommerce_before_shop_loop', 'woocommerce_catalog_ordering', 30
 remove_action('woocommerce_cart_is_empty', 'wc_empty_cart_message', 10);
 
 
-remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
-remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20);
-
-add_action('woocommerce_before_main_content', 'cabling_woocommerce_breadcrumb', 1);
-add_action('woocommerce_before_single_product_summary', 'cabling_get_brand_product', 4);
-add_action('woocommerce_single_product_summary', 'cabling_add_quote_on_product', 21);
-add_action('woocommerce_single_product_summary', 'cabling_additional_information', 90);
 add_action('woocommerce_shop_loop_item_title', 'cabling_product_description', 15);
-add_action('woocommerce_before_shop_loop', 'cabling_product_category_heading');
+//add_action('woocommerce_before_shop_loop', 'cabling_product_category_heading');
 add_action('woocommerce_after_my_account', 'cabling_woocommerce_after_my_account_modal', 99);
-
-function cabling_product_category_heading()
-{
-    echo '<h4>' . __('Products Available', 'cabling') . '</h4>';
-}
-
-function cabling_product_description()
-{
-    echo '<div class="product-excerpt">';
-    the_excerpt();
-    echo '</div>';
-}
-
-/**
- * Remove product data tabs
- */
-add_filter('woocommerce_product_tabs', 'cabling_woo_remove_product_tabs', 98);
-function cabling_woo_remove_product_tabs($tabs)
-{
-    unset($tabs['description']);
-    unset($tabs['additional_information']);
-
-    return $tabs;
-}
 
 function cabling_get_product_attributes($product_id = 0): array
 {
@@ -803,57 +622,43 @@ function cabling_get_product_table_attributes(): array
 
     if (is_tax('product_custom_type')) {
         $product_group = get_product_group_of_type(get_queried_object_id());
-        $is_backup_ring_group = $product_group && is_backup_ring_group($product_group->term_id);
+        $surface_equipment_id = get_surface_equipment_id();
 
-        if ($is_backup_ring_group) {
+        if ($product_group && $surface_equipment_id === $product_group->term_id) {
             $list_fields = array(
-                'product_dash_number_backup_rings' => __('Dash Number', 'cabling'),
-                'inches_id_backup-ring' => __('ID', 'cabling'),
-                'inches_t_backup-ring' => __('T', 'cabling'),
-                'inches_width_backup-ring' => __('Width', 'cabling'),
-                '_sku' => __('SKU', 'cabling'),
-                'product_specifications_met' => __('Specifications Met', 'cabling'),
-                'product_operating_temp' => __('Temperature Range, °F', 'cabling'),
-                'product_colour' => __('Colour', 'cabling'),
+                'surface_name' => __('Name', 'cabling'),
+                'surface_rubber_type'         => __( 'Rubber Type', 'cabling' ),
+                //'surface_assembly_kit'        => __( 'Assembly / Kit', 'cabling' ),
+                'surface_thread_up'           => __( 'Thread Up', 'cabling' ),
+                'surface_thread_down'         => __( 'Thread Down', 'cabling' ),
+                'surface_pressure_rating'     => __( 'Pressure Rating', 'cabling' ),
+                'surface_line_rod_size'       => __( 'Line/ Rod Size', 'cabling' ),
+                'surface_material'            => __( 'Material', 'cabling' ),
+                'surface_minimum_vertical_id' => __( 'Minimum vertical ID', 'cabling' ),
             );
+        } else {
+            $is_backup_ring_group = $product_group && is_backup_ring_group($product_group->term_id);
+
+            if ($is_backup_ring_group) {
+                $list_fields = array(
+                    'product_dash_number_backup_rings' => __('Dash Number', 'cabling'),
+                    'inches_id_backup-ring' => __('ID', 'cabling'),
+                    'inches_t_backup-ring' => __('T', 'cabling'),
+                    'inches_width_backup-ring' => __('Width', 'cabling'),
+                    '_sku' => __('SKU', 'cabling'),
+                    'product_specifications_met' => __('Specifications Met', 'cabling'),
+                    'product_operating_temp' => __('Temperature Range, °F', 'cabling'),
+                    'product_colour' => __('Colour', 'cabling'),
+                );
+            }
         }
     }
 
     return $list_fields;
 }
 
-function cabling_get_product_single_attributes($dynamic_fields, $product_id): array
-{
-    $list_fields = array();
-
-    $product_id = empty($product_id) ? get_the_ID() : $product_id;
-
-    $is_backup_ring = false;
-    $product_groups = get_the_terms($product_id, 'product_group');
-    if ($product_groups && !is_wp_error($product_groups)) {
-        $product_group = reset($product_groups);
-        $is_backup_ring = is_backup_ring_group($product_group->term_id);
-
-        if ($product_group) {
-            $list_fields['attributes']['product_cat'] = array(
-                'label' => '',
-                'value' => $product_group->name
-            );
-        }
-    }
-
-    /*//$product_cat->name
-    $product_cats = get_the_terms($product_id, 'product_cat');
-    if ($product_cats && !is_wp_error($product_cats)) {
-        $product_cat = reset($product_cats);
-
-        if ($product_cat) {
-            $list_fields['attributes']['product_cat'] = array(
-                'label' => '',
-                'value' => $product_cat->name
-            );
-        }
-    }*/
+// cabling_get_product_single_attributes moved to inc/product/single.php
+/*
     //product_material
     $product_material = get_product_field('product_material', $product_id);
     if (!empty($product_material)) {
@@ -1000,8 +805,7 @@ function cabling_get_product_single_attributes($dynamic_fields, $product_id): ar
         }
     }
 
-    return $list_fields;
-}
+*/
 
 function show_filter_value($fieldList, $product_id)
 {
@@ -1034,155 +838,18 @@ function get_product_field($key, $product_id)
     return $value;
 }
 
-function cabling_woocommerce_description()
-{
-    global $product;
-    $heading = __('Product Description', 'cabling');
-    ob_start();
-    if ($product && $product->is_type('variable')) {
-        /*$heading = $product->get_name();
+// cabling_woocommerce_description moved to inc/product/single.php
 
-$variations = get_children(array(
-'post_parent' => $product->get_id(),
-'post_type' => 'product_variation',
-));
-if ($variations) {
-$product_attributes = cabling_get_product_attributes($product->get_id());
-wc_get_template('single-product/product-variation-table.php', [
-    'variations' => $variations,
-    'attributes' => $product_attributes,
-]);
-}*/
-    } else {
-        $key_benefits = get_field('key_benefits', $product->get_id());
-        $use_with = get_field('use_with', $product->get_id());
-        $do_not_use_with = get_field('do_not_use_with', $product->get_id());
-        $typical_values_for_compound = get_field('typical_values_for_compound', $product->get_id());
+// custom_woocommerce_product_add_to_cart_text moved to inc/product/cart.php
 
-        wc_get_template('single-product/product-simple.php', [
-            'key_benefits' => $key_benefits,
-            'use_with' => $use_with,
-            'do_not_use_with' => $do_not_use_with,
-            'typical_values_for_compound' => $typical_values_for_compound,
-        ]);
-    }
-    $product_data = ob_get_clean();
+// Function cabling_add_quote_button() moved to inc/product/quote.php
 
-    ob_start(); ?>
-    <div class="product-description mb-5">
-        <div class="main-description mb-5">
-            <h4><?php echo $heading ?></h4>
-            <?php
-            echo apply_filters('the_content', get_the_content());
-            ?>
-        </div>
-        <?php echo $product_data; ?>
-    </div>
-    <?php
-    $content = ob_get_clean();
-
-    return $content;
-}
-
-// Change Add to Cart text on product archives
-function custom_woocommerce_product_add_to_cart_text($text, $product)
-{
-    return __('Add to cart', 'cabling');
-}
-
-add_filter('woocommerce_product_add_to_cart_text', 'custom_woocommerce_product_add_to_cart_text', 10, 2);
-
-function cabling_add_quote_button($product_id = 0)
-{
-    $product_id = is_product() ? get_the_ID() : $product_id;
-    echo '<div class="d-flex align-items-center">';
-    echo '<div data-action="' . $product_id . '" class="product-request-button show-product-quote">';
-    echo '<a class="btn btn-primary" href="#">' . __('Request a quote – buy via our sales team', 'cabling') . '</a>';
-    echo '</div>';
-
-    if (is_product()) {
-        $user_id = get_current_user_id();
-        $wishlist_products = get_user_meta($user_id, 'wishlist_products', true);
-        $class = '';
-
-        if (is_array($wishlist_products) && in_array($product_id, $wishlist_products)) {
-            $class = 'has-wishlist';
-        }
-
-        ob_start(); ?>
-        <a href="#" class="add-to-cart-button add-to-wishlist ms-2 <?php echo $class ?>"
-           data-product="<?php echo esc_attr($product_id); ?>">
-            <i class="fa-light fa-heart me-2"></i>
-            <span><?php echo __('Add to wishlist', 'cabling'); ?></span>
-        </a>
-        <?php
-        echo ob_get_clean();
-    }
-    echo '</div>';
-}
-
-function cabling_add_quote_on_product()
-{
-    global $product;
-
-    // Check if it's a product page and if price is empty
-    if (is_product() && '' === $product->get_price()) {
-        cabling_add_quote_button();
-    }
-}
-
-function cabling_additional_information()
-{
-    global $product;
-    if ($product && $product->is_type('variable'))
-        return;
-
-    ob_start();
-    cabling_woocommerce_pdf_document($product);
-    echo ob_get_clean();
-}
+// cabling_add_quote_on_product, cabling_additional_information, cabling_related_complementary_section,
+// cabling_woocommerce_pdf_document moved to inc/product/single.php
 
 function cabling_add_quote_section()
 {
     wc_get_template('single-product/product-add-quote.php');
-}
-
-function cabling_related_complementary_section()
-{
-    wc_get_template('product-complementary-section.php');
-}
-
-function cabling_woocommerce_pdf_document($product)
-{
-    $pdfs = get_field('pdp_document');
-    $product_dynamic_fields = get_field('product_dynamic_fields', $product->get_id());
-    $icon = get_template_directory_uri() . '/assets/img/%image%.png';
-
-    $product_attributes = [];
-    if ($product->has_weight()) {
-        $product_attributes['weight'] = array(
-            'label' => __('Weight', 'woocommerce'),
-            'value' => wc_format_weight($product->get_weight()),
-        );
-    }
-
-    if ($product->has_dimensions()) {
-        $product_attributes['dimensions'] = array(
-            'label' => __('Dimensions', 'woocommerce'),
-            'value' => wc_format_dimensions($product->get_dimensions(false)),
-        );
-    }
-
-    $custom_fields = cabling_get_product_single_attributes($product_dynamic_fields, $product->get_id());
-
-    wc_get_template('single-product/product-document.php', array(
-        'pdfs' => $pdfs,
-        'icon' => $icon,
-        'product_attributes' => $product_attributes,
-        'custom_fields' => $custom_fields,
-        'dynamic_fields' => $product_dynamic_fields,
-        'product_id' => $product->get_id(),
-    ));
 }
 
 function cabling_woocommerce_after_my_account_modal()
@@ -1190,29 +857,7 @@ function cabling_woocommerce_after_my_account_modal()
     wc_get_template('myaccount/popup/reset-password.php');
 }
 
-function cabling_woocommerce_find_a_stockist()
-{
-    wc_get_template('single-product/product-stockist.php');
-}
-
-function cabling_get_brand_product($product_id)
-{
-    global $product;
-    if (empty($product_id))
-        $product_id = $product->get_id();
-    $data = [];
-    $brands = get_the_terms($product_id, 'product-brand');
-    if ($brands) {
-        foreach ($brands as $brand) {
-            $brand_image = get_field('taxonomy_image', $brand);
-            if ($brand_image)
-                $data[] = sprintf('<a href="%s">%s</a>', get_term_link($brand), wp_get_attachment_image($brand_image, 'full'));
-        }
-    }
-    echo '<div class="product-brands">';
-    echo implode('', $data);
-    echo '</div>';
-}
+// cabling_woocommerce_find_a_stockist, cabling_get_brand_product moved to inc/product/single.php
 
 //Add client download to my account page
 add_action('woocommerce_after_account_downloads', 'cabling_woocommerce_download_client', 10, 1);
@@ -1257,69 +902,11 @@ add_filter('password_hint', function ($hint) {
     return __('The password should be at least 8 characters long. Use upper and lower case letters, numbers, and symbols like ! " ? $ % ^ &amp; ).');
 });
 
-add_filter('woocommerce_save_account_details_required_fields', 'cabling_custom_edit_account_required_fields');
-function cabling_custom_edit_account_required_fields($fields)
-{
-    return array(
-        'account_first_name' => __('First name', 'woocommerce'),
-        'account_last_name' => __('Last name', 'woocommerce'),
-    );
-}
+// Function cabling_custom_edit_account_required_fields() moved to inc/gi-customer.php
 
 // Save the custom field when the user updates their account details
-function save_custom_field_my_account_edit($user_id)
-{
-    if (isset($_POST['user_title'])) {
-        update_user_meta($user_id, 'user_title', sanitize_text_field($_POST['user_title']));
-    }
-    if (isset($_POST['job_title'])) {
-        update_user_meta($user_id, 'job_title', sanitize_text_field($_POST['job_title']));
-    }
-    if (isset($_POST['function'])) {
-        update_user_meta($user_id, 'function', sanitize_text_field($_POST['function']));
-    }
-    if (isset($_POST['billing_company'])) {
-        update_user_meta($user_id, 'billing_company', sanitize_text_field($_POST['billing_company']));
-    }
-    if (isset($_POST['billing_address_1'])) {
-        update_user_meta($user_id, 'billing_address_1', sanitize_text_field($_POST['billing_address_1']));
-    }
-    if (isset($_POST['billing_country'])) {
-        update_user_meta($user_id, 'billing_country', sanitize_text_field($_POST['billing_country']));
-    }
-    if (isset($_POST['billing_city'])) {
-        update_user_meta($user_id, 'billing_city', sanitize_text_field($_POST['billing_city']));
-    }
-    if (isset($_POST['billing_postcode'])) {
-        update_user_meta($user_id, 'billing_postcode', sanitize_text_field($_POST['billing_postcode']));
-    }
-    if (isset($_POST['billing_state'])) {
-        update_user_meta($user_id, 'billing_state', sanitize_text_field($_POST['billing_state']));
-    }
-    if (isset($_POST['company_name_responsible'])) {
-        update_user_meta($user_id, 'company_name_responsible', sanitize_text_field($_POST['company_name_responsible']));
-    }
-    if (isset($_POST['company-sector'])) {
-        update_user_meta($user_id, 'company-sector', sanitize_text_field($_POST['company-sector']));
-    }
-    if (isset($_POST['billing_vat'])) {
-        update_user_meta($user_id, 'billing_vat', sanitize_text_field($_POST['billing_vat']));
-    }
-    if (isset($_POST['billing_phone'])) {
-        update_user_meta($user_id, 'billing_phone', sanitize_text_field($_POST['billing_phone']));
-    }
-    if (isset($_POST['billing_phone_code'])) {
-        update_user_meta($user_id, 'billing_phone_code', sanitize_text_field($_POST['billing_phone_code']));
-    }
-    if (current_user_can('administrator') && isset($_POST['sap_customer'])) {
-        update_user_meta($user_id, 'sap_customer', sanitize_text_field($_POST['sap_customer']));
-    }
-    if (isset($_POST['account_first_name']) && isset($_POST['account_last_name'])) {
-        wp_update_user(array('ID' => $user_id, 'display_name' => $_POST['account_first_name'] . ' ' . $_POST['account_last_name']));
-    }
-}
+// Function save_custom_field_my_account_edit() moved to inc/gi-customer.php
 
-add_action('woocommerce_save_account_details', 'save_custom_field_my_account_edit');
 
 function cabling_save_verify_cookie()
 {
@@ -1332,19 +919,8 @@ function cabling_save_verify_cookie()
 
 add_action('init', 'cabling_save_verify_cookie');
 
-function cabling_password_reset_handle($user)
-{
-    $key = $_POST['reset_key'];
-    $verify_cookie = $_COOKIE['verify_customer_cabling_' . $user->ID];
-    if ($verify_cookie === $key) {
-        //update child user
-        update_user_meta($user->ID, 'has_approve', 'true');
-        update_user_meta($user->ID, 'customer_level', '2');
-        update_user_meta($user->ID, 'has_approve_date', current_time('mysql'));
-    }
-}
+// Function cabling_password_reset_handle() moved to inc/gi-customer.php
 
-add_action('password_reset', 'cabling_password_reset_handle');
 
 add_action('thmaf_after_address_display', 'add_btn_add_shipping_address', 999);
 function add_btn_add_shipping_address()
@@ -1373,9 +949,20 @@ function custom_text_before_product_listing()
         $thumbnail_id = get_field('taxonomy_image', $cat);
     }
     $thumbnail_id = empty($thumbnail_id) ? 1032601 : $thumbnail_id;
-    get_template_part('template-parts/filter_heading', 'product');
+
+	$skuType = get_query_var('skuType');
+	$typeLabel = '';
+	if (!empty($skuType)) {
+		$typeLabel = sprintf(' - %s', ProductsFilterHelper::getSkuTypeLabel( $skuType));
+        $skuTypeImageId = get_field(strtolower("sku_{$skuType}_image"), $cat);
+        if ($skuTypeImageId){
+            $thumbnail_id = $skuTypeImageId;
+        }
+	}
+
+    get_template_part('template-parts/filter_heading', 'product', [ 'hideWelcome' => true]);
     echo wp_get_attachment_image($thumbnail_id, 'full', false, ['class' => 'my-3']);
-    echo '<h1 class="woocommerce-products-header__title page-title">' . woocommerce_page_title(false) . '</h1>';
+    echo '<h1 class="woocommerce-products-header__title page-title">' . woocommerce_page_title(false) . $typeLabel .'</h1>';
 }
 
 add_action('woocommerce_archive_description', 'custom_text_before_product_listing', 5);
@@ -1402,23 +989,7 @@ function send_verify_email($user_email, $customer_id): void
     $mailer->send($user_email, $subject, $content, $headers);
 }
 
-function get_product_category($taxonomy = 'product_cat', $isParent = 0, $includes = [])
-{
-    $args = array(
-        'taxonomy' => $taxonomy,
-        'hide_empty' => false,
-        'parent' => $isParent,
-        'exclude' => [7889],
-        'orderby' => 'term_order'
-
-    );
-    if (!empty($includes)) {
-        $args['exclude'] = [];
-        $args['include'] = $includes;
-    }
-
-    return get_terms($args);
-}
+// Function get_product_category moved to inc/product-filter/filter-helper.php
 
 function get_product_line_category(string $taxonomy = '', string $meta_key = '', array $meta_values = array(), bool $returnId = false, array $includes = [])
 {
@@ -1492,47 +1063,9 @@ function get_product_type_category(string $meta_value = '')
     return $terms;
 }
 
-function get_product_category_list()
-{
-    $taxs = get_product_line_category('product_group', 'family_category', ['8626']);;
-    $cat = '';
-    if ($taxs) {
-        $cat .= '<select name="product_group" id="product_group" class="form-select">';
-        $cat .= '<option value="">' . __('Select Category', 'cabling') . '</option>';
-        foreach ($taxs as $tax) {
-            $cat .= '<option value="' . $tax->term_id . '">' . $tax->name . '</option>';
-        }
-        $cat .= '</select>';
-    }
-    return $cat;
-}
+// Function get_product_category_list moved to inc/product-filter/filter-helper.php
 
-// Define a function to get product IDs by category ID
-function get_product_ids_by_category($taxonomy = '', $term_id = array(), $attributes = array())
-{
-    $args = array(
-        'fields' => 'ids',
-        'post_type' => 'product',
-        'post_status' => 'publish',
-        'numberposts' => -1,
-        'tax_query' => array(
-            array(
-                'taxonomy' => $taxonomy,
-                'field' => 'term_id',
-                'terms' => $term_id,
-            ),
-        ),
-    );
-
-    if (!empty($attributes)) {
-        $meta_query = get_meta_query_from_attributes($attributes);
-        $args['meta_query'] = $meta_query;
-    }
-
-    $posts = get_posts($args);
-
-    return $posts;
-}
+// Function get_product_ids_by_category moved to inc/product-filter/filter-helper.php
 
 if (!function_exists('custom_compare')) {
     function custom_compare($a, $b)
@@ -1557,253 +1090,15 @@ if (!function_exists('custom_compare')) {
 }
 
 
-function get_filter_lists($get_options = true): array
-{
-    $transient_name = 'filter_lists_transient';
+// Function get_filter_lists moved to inc/product-filter/filter-helper.php
 
-    //$fieldList = get_transient($transient_name);
+// Function clear_filter_lists_cache and add_action('acf/save_post', 'clear_filter_lists_cache') moved to inc/product-filter/filter-helper.php
 
-    // If the transient data is not available, fetch and set it
-    //if ($fieldList === false) {
-    $field_group_key = 'group_655f1001b4d9e';
-    $fields = acf_get_fields($field_group_key);
-    $fieldList = array();
-    if ($fields) {
-        // Loop through the fields and add them to the $fieldList array
-        foreach ($fields as $key => $field) {
-            $choices = array();
-            $value = '';
-            $valueType = '';
-            $label = $field['label'];
-            if ('product_operating_temp' === $field['name']) {
-                $label = 'Operating Temp';
-                continue;
-            }
-            if (is_product()) {
-                $postId = get_the_ID();
-                $value = get_post_meta($postId, $field['name'], true);
-            }
-            $run_asort = true;
-            if (is_tax('product_custom_type')) {
-                $term = get_queried_object();
-                $attributes = $_POST['attributes'] ?? [];
-                $product_ids = get_product_ids_by_category($term->taxonomy, [$term->term_id], $attributes);
+// Function get_all_meta_values_cached moved to inc/product-filter/filter-helper.php
 
-                switch ($field['name']) {
-                    case 'product_contact_media':
-                        $contact_media = get_field('type_contact_media', $term);
+// Function get_acf_post_options moved to inc/product-filter/filter-helper.php
 
-                        if ($contact_media) {
-                            $choices = array($contact_media => get_the_title($contact_media));
-                        }
-                        $valueType = 'key';
-                        break;
-                    case 'product_material':
-                        $product_material = get_field('type_material', $term);
-
-                        if ($product_material) {
-                            $choices = array($product_material => get_the_title($product_material));
-                            $valueType = 'key';
-                        }
-                        break;
-                    case 'product_compound':
-                        $choices = get_acf_taxonomy_options('compound_certification');
-                        $valueType = 'key';
-                        break;
-                    case 'product_dash_number':
-                    case 'product_dash_number_backup_rings':
-                        $choices = get_all_meta_values_cached($field['name']);
-                        break;
-                    case 'product_colour':
-                    case 'product_complance':
-                    case 'product_min':
-                    case 'product_max':
-                        $choices = get_all_meta_values_cached($field['name'], $product_ids);
-                        break;
-                    case 'product_type':
-                        $choices = ['Standard Size'];
-                        break;
-                    default:
-                        if ($field['type'] === 'post_object') {
-                            $choices = get_acf_post_options($field['post_type'], $product_ids);
-                            $valueType = 'key';
-                        } elseif (!empty($field['choices'])) {
-                            $choices = get_all_meta_values_cached($field['name'], $product_ids);
-                            $valueType = 'key';
-                        } else {
-                            $choices = get_all_meta_values_cached($field['name'], $product_ids);
-                        }
-                        asort($choices);
-                        break;
-                }
-            } else if ($get_options) {
-                if ($field['name'] === 'product_compound') {
-                    $choices = get_acf_taxonomy_options('compound_certification');
-                    $valueType = 'key';
-                } elseif ($field['name'] === 'product_type') {
-                    $choices = $field['choices'];
-                    $valueType = 'key';
-                } elseif ($field['type'] === 'post_object') {
-                    $choices = get_acf_post_options($field['post_type']);
-                    $valueType = 'key';
-                } elseif ($field['name'] === 'product_min') {
-                    $choices = get_all_meta_values_cached($field['name']);
-                    usort($choices, 'custom_compare');
-                    $run_asort = false;
-                } elseif ($field['name'] === 'product_max') {
-                    $choices = get_all_meta_values_cached($field['name']);
-                    usort($choices, 'custom_compare');
-                    $run_asort = false;
-                } elseif (!empty($field['choices'])) {
-                    $choices = get_all_meta_values_cached($field['name']);
-                    //$valueType = 'key';
-                } else {
-                    $choices = get_all_meta_values_cached($field['name']);
-                }
-                if ($run_asort) {
-                    asort($choices);
-                }
-            }
-
-            $name = empty($field['name']) ? $key : $field['name'];
-            $fieldList[$name] = array(
-                'label' => $label,
-                'multiple' => $field['multiple'] ?? 0,
-                'type' => empty($field['multiple']) ? 'radio' : 'checkbox',
-                'field_type' => $field['type'],
-                'choices' => $choices,
-                'valueType' => $valueType,
-                'value' => $value
-            );
-        }
-    }
-
-    //set_transient($transient_name, $fieldList, 24 * HOUR_IN_SECONDS);
-    //}
-    return $fieldList;
-}
-
-add_action('acf/save_post', 'clear_filter_lists_cache', 20);
-function clear_filter_lists_cache($post_id)
-{
-    if (get_post_type($post_id) === 'acf-field-group') {
-        $field_group_key = get_field('key', $post_id);
-
-        $target_field_group_key = 'group_655f1001b4d9e';
-
-        if ($field_group_key === $target_field_group_key) {
-            $transient_name = 'filter_lists_transient';
-
-            delete_transient($transient_name);
-        }
-    }
-}
-
-function get_all_meta_values_cached($meta_key, array $post_ids = [])
-{
-    $acf_field = acf_get_field($meta_key);
-    //$transient_name = 'all_meta_values_' . md5($meta_key);
-
-    //$values = get_transient($transient_name);
-    //if ($values === false) {
-    global $wpdb;
-
-    $sql = "SELECT DISTINCT meta_value
-            FROM {$wpdb->postmeta}
-            WHERE meta_key = %s";
-
-    if (!empty($post_ids)) {
-        $placeholders = implode(', ', array_fill(0, count($post_ids), '%s'));
-        $sql .= " AND post_id IN ($placeholders) ";
-    }
-
-    $sql .= " ORDER BY meta_value";
-
-    $values = $wpdb->get_col(
-        $wpdb->prepare(
-            $sql,
-            $meta_key,
-            ...$post_ids
-        )
-    );
-    //set_transient($transient_name, $values, 24 * HOUR_IN_SECONDS);
-    //}
-
-    if (!empty($values) && $acf_field['type'] === 'checkbox') {
-        $new_values = array();
-        foreach ($values as $value) {
-            if (empty($value)) {
-                continue;
-            }
-            $unserializedData = unserialize($value);
-
-            if ($unserializedData === false) {
-                continue;
-            } else {
-                foreach ($unserializedData as $val) {
-                    if (in_array($val, $new_values)) {
-                        continue;
-                    }
-                    $new_values[] = $val;
-                }
-            }
-        }
-        $values = $new_values;
-    }
-
-    /* if ($meta_key === 'product_complance') {
-var_dump($values);
-}*/
-    sort($values);
-
-    return $values;
-}
-
-function get_acf_post_options($post_types = [], $product_ids = [])
-{
-    $args = [
-        'post_type' => $post_types,
-        'post_status' => 'publish',
-        'numberposts' => -1,
-        'orderby' => 'title',
-        'order' => 'ASC'
-    ];
-    if (!empty($product_ids)) {
-        $args['include'] = $product_ids;
-    }
-    $posts = get_posts($args);
-    $list = [];
-    if ($posts) {
-        foreach ($posts as $post) {
-            $list[$post->ID] = $post->post_title;
-        }
-    }
-
-    return $list;
-}
-
-function get_acf_taxonomy_options($taxonomy = ''): array
-{
-    $args = array(
-        'taxonomy' => $taxonomy,
-        'hide_empty' => false,
-        'parent' => 0,
-        'orderby' => 'term_order'
-
-    );
-    if (!empty($_REQUEST['certification-compound'])) {
-        $args['slug'] = $_REQUEST['certification-compound'];
-    }
-    $taxonomies = get_terms($args);
-    $list = [];
-    if ($taxonomies) {
-        foreach ($taxonomies as $post) {
-            $list[$post->term_id] = $post->name;
-        }
-    }
-
-    return $list;
-}
+// Function get_acf_taxonomy_options moved to inc/product-filter/filter-helper.php
 
 function get_term_ids_by_attributes(array $product_ids, string $taxonomy = 'product_group'): array
 {
@@ -1914,151 +1209,15 @@ function search_product_by_meta(array $metas, $group): array
     return $posts;
 }
 
-function redirect_on_product_type()
-{
-    if (is_tax('product_custom_type')) {
-        global $wp_query;
+// Function redirect_on_product_type and add_action('template_redirect', 'redirect_on_product_type') moved to inc/product-filter/filter-helper.php
 
-        if (empty($_REQUEST['_wpnonce']) && $wp_query->found_posts === 1) {
-            $products = $wp_query->get_posts();
-            $productLink = get_the_permalink($products[0]);
-            wp_redirect($productLink);
-            exit();
-        }
-    }
-}
+// Function cabling_change_product_query and add_action('woocommerce_product_query', 'cabling_change_product_query') moved to inc/product-filter/filter-helper.php
 
-add_action('template_redirect', 'redirect_on_product_type');
+// Function get_meta_query_from_attributes moved to inc/product-filter/filter-helper.php
 
-function cabling_change_product_query($query)
-{
-    if ((is_tax('product_cat') || is_tax('compound_cat') || is_tax('product_custom_type'))) {
-        $paged = $query->get('paged');
-        if (isset($_REQUEST['data-filter'])) {
-            $data = json_decode(base64_decode($_REQUEST['data-filter']), true);
-            $attributes = $data['attributes'] ?? [];
-        } elseif (isset($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'product-category-filter') && !empty($_POST['attributes'])) {
-            $attributes = $_POST['attributes'];
-        } else {
-            return $query;
-        }
+// Function selected_filter moved to inc/product-filter/filter-helper.php
 
-        $paged = $_POST['paged'] ?? $paged;
-
-        $custom_filter = $attributes;
-        $old_meta_query = $query->get('meta_query');
-        if (!empty($attributes['product_compound'])) {
-            $attributes['product_compound'] = get_compound_product($attributes['product_compound']);
-        }
-        if (!empty($attributes['product_compound_single'])) {
-            if (empty($attributes['product_compound'])) {
-                $attributes['product_compound'] = $attributes['product_compound_single'];
-            } else {
-                $attributes['product_compound'] = array_merge($attributes['product_compound'], $attributes['product_compound_single']);
-            }
-
-            unset($attributes['product_compound_single']);
-        }
-        unset($attributes['group-type']);
-        $meta_query = get_meta_query_from_attributes($attributes);
-        //echo '<pre>';var_dump($attributes, $meta_query);echo '</pre>';
-        $query->set('meta_query', array_merge($old_meta_query, $meta_query));
-        $query->set('orderby', 'meta_value');
-        $query->set('meta_key', 'product_dash_number');
-        $query->set('order', 'ASC');
-        $query->set('paged', $paged);
-        $query->set('custom_filter', $custom_filter);
-    }
-    return $query;
-}
-
-add_action('woocommerce_product_query', 'cabling_change_product_query');
-
-/**
- * @param $attributes
- * @return array
- */
-function get_meta_query_from_attributes($attributes): array
-{
-    $meta_query['relation'] = 'AND';
-
-    foreach ($attributes as $meta_key => $meta_values) {
-        if (empty($meta_values)) {
-            continue;
-        }
-        if ($meta_key === 'product_compound' || $meta_key === 'product_dash_number' || $meta_key === 'product_dash_number_backup_rings') {
-            $meta_query[] = array(
-                'key' => $meta_key,
-                'value' => $meta_values,
-                'compare' => 'IN'
-            );
-            continue;
-        }
-        if ($meta_key === 'compound_certification') {
-            continue;
-        }
-        if (is_array($meta_values) && sizeof($meta_values)) {
-            $meta_array = array();
-            foreach ($meta_values as $value) {
-                if (empty($value)) {
-                    continue;
-                }
-                $query = array(
-                    'key' => $meta_key,
-                    'value' => $value,
-                    'compare' => '='
-                );
-                if ($meta_key === 'product_contact_media' || $meta_key === 'product_complance' || $meta_key === 'product_colour') {
-                    $query['value'] = serialize(strval($value));
-                    $query['compare'] = 'LIKE';
-                }
-                $meta_array[] = $query;
-            }
-
-            if (count($meta_array) === 1) {
-                $meta_query[] = $meta_array[0];
-                continue;
-            }
-
-            if (count($meta_array) > 1) {
-                $meta_query[] = array(
-                    'relation' => 'OR',
-                    $meta_array
-                );
-            }
-        } else {
-            $meta_query[] = array(
-                'key' => $meta_key,
-                'value' => $meta_values,
-                'compare' => '='
-            );
-        }
-    }
-    return $meta_query;
-}
-
-function selected_filter($name, $value): bool
-{
-    $metas = $_REQUEST['attributes'];
-    if (isset($metas[$name])) {
-        if (is_array($metas[$name]) && in_array($value, $metas[$name])) {
-            return true;
-        } else if ($metas[$name] == $value) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function show_product_filter_input_name($slug, $attribute): string
-{
-    if ($slug === 'product_type') {
-        $name = 'name="product_type"';
-    } else {
-        $name = 'name="attributes[' . $slug . '][]"';
-    }
-    return $name;
-}
+// Function show_product_filter_input_name moved to inc/product-filter/filter-helper.php
 
 function order_woocommerce_countries($countries)
 {
@@ -2103,12 +1262,8 @@ function getTaxonomyThumbnail(mixed $taxonomy, string $class = ''): string
     return $thumbnail;
 }
 
-function woocommerce_no_products_quote()
-{
-    cabling_add_quote_button();
-}
+// Function woocommerce_no_products_quote() moved to inc/product/quote.php
 
-add_action('woocommerce_no_products_found', 'woocommerce_no_products_quote', 99);
 
 /**
  * @param array $data
@@ -2199,98 +1354,21 @@ function get_available_attributes(array $product_ids): ?array
     return null;
 }
 
-function company_name_field()
-{
-    $departments = CRMConstant::FUNCTION_FIELD;
+// Function company_name_field() moved to inc/ga_crm.php
 
-    asort($departments);
+// Function get_name_title() moved to inc/ga_crm.php
 
-    if (isset($_REQUEST['company-sector'])) {
-        $company = $_REQUEST['company-sector'];
-    } elseif (is_user_logged_in()) {
-        $company = esc_attr(get_user_meta(get_current_user_id(), 'company-sector', true));
-    } else {
-        $company = '';
-    }
-    return show_product_field('company-sector', array(
-        'options' => $departments,
-        'label' => __('Company Sector', 'woocommerce'),
-        'default' => $company,
-        'class' => ' form-group has-focus mb-3',
-        'required' => true
-    ));
-}
+// Function get_product_of_interests() moved to inc/ga_crm.php
 
-function get_name_title($value = null)
-{
-    $titles = CRMConstant::TITLE;
-    if (!empty($value)) {
-        return array_search($value, $titles);
-    }
-    return $titles;
-}
+// Function get_desired_applications() moved to inc/ga_crm.php
 
-function get_product_of_interests($value = null)
-{
-    $product_of_interests = CRMConstant::PRODUCT;
-    if (!empty($value)) {
-        $id = array_search($value, $product_of_interests);
+// Function product_of_interest_field() moved to inc/ga_crm.php
 
-        return (string)$id ?? '';
-    }
-    return $product_of_interests;
-}
+// Function product_desired_application_field() moved to inc/ga_crm.php
 
-function get_desired_applications($value = null)
-{
-    $desired_applications = CRMConstant::COMPOUND;
-    if (!empty($value)) {
-        return in_array($value, $desired_applications) ? $value : '';
-    }
-    return $desired_applications;
-}
+// Function product_material_field() moved to inc/ga_crm.php
 
-function product_of_interest_field($value = '')
-{
-    $product_of_interests = get_product_of_interests();
-
-    $field = '';
-    $options = '<option value="">' . __('Choose an option', 'woocommerce') . '</option>';
-    foreach ($product_of_interests as $option_text) {
-        $options .= '<option value="' . esc_attr($option_text) . '" ' . selected($value, $option_text, false) . '>' . esc_html($option_text) . '</option>';
-    }
-
-    $field .= '<select name="product-of-interest" id="product-of-interest" class="select form-select" required>' . $options . '</select>';
-
-    echo '<p class="form-row w-100"><label for="product-of-interest">' . __('What Datwyler product are you most interested in?', 'woocommerce') . '<span class="required">*</span></label>' . $field . '</p>';
-}
-
-function product_desired_application_field($value = '')
-{
-    echo show_product_field('o_ring[desired-application]', array(
-        'options' => CRMConstant::COMPOUND,
-        'label' => __('Desired Application', 'woocommerce'),
-        'default' => $value
-    ));
-}
-
-function product_material_field($value = '')
-{
-    echo show_product_field('o_ring[material]', array(
-        'options' => CRMConstant::MATERIAL,
-        'label' => __('Material', 'woocommerce'),
-        'default' => $value
-    ));
-}
-
-function product_harness_field($value = '')
-{
-    echo show_product_field('o_ring[hardness]', array(
-        'options' => CRMConstant::HARDNESS,
-        'label' => __('Hardness', 'woocommerce'),
-        'default' => $value
-    ));
-}
+// Function product_harness_field() moved to inc/ga_crm.php
 
 function product_address_state_field()
 {
@@ -2301,129 +1379,26 @@ function product_address_state_field()
     return '<div class="w-100 form-group has-focus">' . $field . '<label for="billing_postcode">State<span                                             class="required">*</span></label></div>';
 }
 
-function show_product_field($name, $options = array()): string
-{
-    $default = $options['default'] ?? '';
-    $id = $options['id'] ?? $name;
-    $required = empty($options['required']) ? '' : 'required';
-    $requiredLabel = empty($options['required']) ? '' : '<span class="required">*</span>';
-    $option = '<option value="">' . __('Choose an option', 'woocommerce') . '</option>';
-    foreach ($options['options'] as $key => $option_text) {
-        $selectKey = empty($options['key']) ? $option_text : $key;
-        $option .= '<option value="' . esc_attr($selectKey) . '" ' . selected($default, $selectKey, false) . '>' . esc_html($option_text) . '</option>';
-    }
+// Function show_product_field() moved to inc/ga_crm.php
 
-    $field = '<select name="' . $name . '" id="' . $id . '" class="select form-select" ' . $required . '>' . $option . '</select>';
-
-    return '<div class="w-100 form-group has-focus' . ($options['class'] ?? '') . '">' . $field . '<label for="' . $name . '">' . $options['label'] . $requiredLabel . '</label></div>';
-}
-
-function show_input_field($name, $options = array())
-{
-    $type = $options['type'] ?? 'text';
-    switch ($type) {
-        case 'country':
-        case 'state':
-            break;
-        case 'hidden';
-            $options['return'] = true;
-            $field = woocommerce_form_field($name, $options);
-            break;
-        default:
-            $value = empty($options['value']) ? '' : $options['value'];
-            $required = empty($options['required']) ? '' : 'required';
-            $requiredLabel = empty($options['required']) ? '' : '<span class="required">*</span>';
-            $class = is_array($options['class']) ? implode(' ', $options['class']) : ' ';
-
-            $input = '<input type="' . $type . '" name="' . $name . '" id="' . $name . '"" value="' . $value . '" class="form-control" ' . $required . '/>';
-
-            $field = '<div class="form-group mb-3 ' . $class . '">' . $input . '<label for="' . $name . '">' . $options['label'] . '&nbsp;' . $requiredLabel . '</label></div>';
-            break;
-    }
-    if (empty($options['return'])) {
-        echo $field;
-    } else {
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        return $field;
-    }
-}
+// Function show_input_field() moved to inc/ga_crm.php
 
 function debug_log($subject, $body)
 {
     //wp_mail('michael.santos@infolabix.com,jose.martins@infolabix.com', $subject, $body);
 }
 
-function show_product_filter_input_value($attribute, $value)
-{
-    if ($attribute === 'product_dash_number') {
-        return str_replace('AS', '', $value);
-    }
-    return $value;
-}
+// Function show_product_filter_input_value moved to inc/product-filter/filter-helper.php
 
-function get_product_filter_link($isBack = false): string
-{
-    if (isset($_POST['attributes'])) {
-        $attributes = array(
-            'attributes' => $_POST['attributes'],
-            'paged' => $_POST['paged'] ?? 1,
-        );
-        $data = base64_encode(json_encode($attributes));
-    } elseif (isset($_GET['data-filter'])) {
-        $data = $_GET['data-filter'];
-    } else {
-        $data = '';
-    }
-    if ($isBack) {
-        $link = home_url('/products-and-services');
-        $history = $data;
-    } else {
-        $previous_link = add_query_arg('data-filter', $data, get_term_link(get_queried_object()));
-        $link = get_the_permalink();
-        $history = base64_encode($previous_link);
-    }
-    return add_query_arg('data-history', $history, $link);
-}
+// Function get_product_filter_link moved to inc/product-filter/filter-helper.php
 
-add_filter('woocommerce_add_error', 'woocommerce_add_error_callback');
-function woocommerce_add_error_callback($message)
-{
-    if ($message === 'Invalid username or email.') {
-        $message = __('Invalid email. Please try again!', 'woocommerce');
-    }
-    return $message;
-}
+// Function woocommerce_add_error_callback() moved to inc/gi-customer.php
 
-add_action('lostpassword_post', 'gi_retrieve_password_callback', 10, 2);
-function gi_retrieve_password_callback($errors, $user_data)
-{
-    if (isset($user_data->user_login)) {
-        $key = sanitize_key($user_data->user_login . '_limit_password_reset');
-        $limit = get_transient($key);
-        if ($limit) {
-            $link = esc_url(add_query_arg(array('error' => 'request_too_much'), wc_get_endpoint_url('lost-password', '', wc_get_page_permalink('myaccount'))));
+// Function gi_retrieve_password_callback() moved to inc/gi-customer.php
 
-            wp_redirect($link);
-            exit();
-        }
-        set_transient($key, true, 120);
-    }
-}
+// Function gi_custom_reset_password_heading() moved to inc/gi-customer.php
 
-add_filter('woocommerce_email_subject_customer_reset_password', 'gi_custom_reset_password_heading');
-add_filter('woocommerce_email_heading_customer_reset_password', 'gi_custom_reset_password_heading');
-function gi_custom_reset_password_heading($title)
-{
-    $title = __('Datwyler Sealing Solutions: Password Reset Request', 'cabling');
-    return $title;
-}
-
-add_filter('woocommerce_get_terms_and_conditions_checkbox_text', 'gi_woocommerce_get_terms_and_conditions_checkbox_text');
-function gi_woocommerce_get_terms_and_conditions_checkbox_text($text)
-{
-    $text = __('I confirm all details are correct', 'cabling');
-    return $text;
-}
+// Function gi_woocommerce_get_terms_and_conditions_checkbox_text() moved to inc/product/checkout.php
 
 #ref GID-1044
 remove_action('woocommerce_before_checkout_form', 'woocommerce_checkout_login_form', 10);
@@ -2501,16 +1476,7 @@ function custom_change_cart_item_prices( $cart ) {
 //     $_POST['shipping_method'] = $chosen_shipping_methods;
 // }
 
-// #GID-1159
-function gi_add_to_cart_redirect($url)
-{
-    if (isset($_GET['redirect-to']) && $_GET['redirect-to'] === 'checkout') {
-        $url = wc_get_checkout_url();
-    }
-    return $url;
-}
-
-add_filter('woocommerce_add_to_cart_redirect', 'gi_add_to_cart_redirect');
+// gi_add_to_cart_redirect, add_price_suffix moved to inc/product/cart.php
 
 add_filter('woocommerce_get_endpoint_url', 'gi_woocommerce_account_menu_item_link', 10, 4);
 function gi_woocommerce_account_menu_item_link($url, $endpoint, $value, $permalink)
@@ -2522,26 +1488,8 @@ function gi_woocommerce_account_menu_item_link($url, $endpoint, $value, $permali
     return $url;
 }
 
-//GID-1200
-add_filter('woocommerce_get_price_html', 'add_price_suffix', 100);
-add_filter('woocommerce_cart_item_price', 'add_price_suffix', 100);
-function add_price_suffix($price)
-{
-    if (!$price) {
-        return '';
-    }
-    $suffix = ' (price per 100 pieces rounded to two decimal places)';
-    return $price . $suffix;
-}
-
 // GID-1219
-add_action('woocommerce_before_my_account', 'remove_session_notices_from_account_page');
-function remove_session_notices_from_account_page()
-{
-    if (WC()->session) {
-        WC()->session->set('wc_notices', array());
-    }
-}
+// Function remove_session_notices_from_account_page() moved to inc/gi-customer.php
 
 // GID-1251
 add_action('template_redirect', 'redirect_if_url_is_products');
@@ -2554,46 +1502,8 @@ function redirect_if_url_is_products()
     }
 }
 
-// GID-1249
-add_filter('wc_add_to_cart_message_html', 'custom_add_to_cart_message', 10, 2);
-function custom_add_to_cart_message($message, $products)
-{
-    $continue_shopping_url = get_field('buy_online_link', 'option');
-    $continue_button = '<a href="' . esc_url($continue_shopping_url) . '" class="ml-2 button wc-forward">' . __('Continue Shopping', 'woocommerce') . '</a>';
-    if ('yes' != get_option('woocommerce_cart_redirect_after_add')) {
-        $message .= $continue_button;
-    }
-    return $message;
-}
-
-add_filter('woocommerce_continue_shopping_redirect', 'gi_continue_shopping_redirect');
-function gi_continue_shopping_redirect($redirect_url)
-{
-    $continue_shopping_url = get_field('buy_online_link', 'option');
-    return $continue_shopping_url;
-}
-
-// GID-1221
-add_action('woocommerce_add_to_cart', 'remove_same_product_before_add_to_cart', 10, 6);
-function remove_same_product_before_add_to_cart($cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data)
-{
-    $cart = WC()->cart->get_cart();
-    $count_found = 0;
-    $remove_key = '';
-    foreach ($cart as $key => $item) {
-        if ($item['product_id'] == $product_id) {
-            if (!$remove_key) {
-                $remove_key = $key;
-            }
-            $count_found++;
-            if ($count_found > 1) {
-                WC()->cart->remove_cart_item($remove_key);
-                $count_found = 0;
-                $remove_key = '';
-            }
-        }
-    }
-}
+// custom_add_to_cart_message, gi_continue_shopping_redirect, remove_same_product_before_add_to_cart
+// moved to inc/product/cart.php
 
 // === Surface Equipment functions (migrated from dev) ===
 

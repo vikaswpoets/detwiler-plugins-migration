@@ -4,7 +4,23 @@ add_action('woocommerce_review_order_before_payment', 'add_po_number_note');
 add_action('woocommerce_review_order_before_payment', 'add_po_number_field_before_order_review');
 
 function add_po_number_note() {
-    echo '<p>A note If you have ordered a mix of items that are in and out of stock: to save you on costs, shipping will be done in one shipment once all items are ready to ship. If you need in stock items immediately, best to place a separate order for those items.</p>';
+	echo '<p>To help you save on shipping costs, if you’ve ordered a mix of items that are in and out of stock, we’ll send all items together once all are available to ship. If you need one of the items right away, we recommend to place a separate order for it.</p>';
+	$isDoubleEProduct = false;
+	$hasMinimumFee = false;
+
+	if ( has_surface_equipment_on_cart() ) {
+		$isDoubleEProduct = true;
+	}
+	foreach ( WC()->cart->get_fees() as $fee ){
+		if ( $fee->id == 'minimum_fee' ) {
+			$hasMinimumFee = true;
+		}
+	}
+	if ($isDoubleEProduct && $hasMinimumFee){
+        echo '<p class="order-fee-notice mb-3">';
+        echo __('The minimum order amount per individual item is $15. For any individual item totalling below $15, the difference between the price and $15 will be included.', 'cabling');
+        echo '</p>';
+	}
 }
 function add_po_number_field_before_order_review() {
     woocommerce_form_field('po_number', array(

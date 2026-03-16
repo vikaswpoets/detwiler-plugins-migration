@@ -136,7 +136,7 @@ class CRMService
                 $result['status'] = 'wpcf7invalid';
 $result['exception'] = $e->getTraceAsString();
 
-                //wp_mail('jose.martins@infolabix.com', 'crm_action_after_form_submission', $e->getMessage() . '###' . $e->getTraceAsString());
+                wp_mail('jose.martins@infolabix.com', 'crm_action_after_form_submission', $e->getMessage() . '###' . $e->getTraceAsString());
             }
         }
 

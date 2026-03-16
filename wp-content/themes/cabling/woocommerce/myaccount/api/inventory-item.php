@@ -22,17 +22,22 @@ $backlogMainTable = array(
     'RemainingValue' => __('Remaining Value', 'cabling'),
 );
 ?>
-<?php if (is_array($data['stock'])): 
-
-                    $totalqtyitemized=[];
-                    $totalQty = 0;
-                    $basemat='';
-                    foreach ($data['stock'] as $s) {
-                        $totalqtyitemized[$s['Material']]=(isset($totalqtyitemized[$s['Material']])?$totalqtyitemized[$s['Material']]:0)+floatval($s['StockQuantity']);
-                        $totalQty += floatval($s['StockQuantity']);
-                        $basemat=$s['basesku'];
-                    }
-                    ?>
+<?php 
+$skutoredirect=0;
+//var_dump($data['stock']);
+if (is_array($data['stock'])): 
+        $totalqtyitemized=[];
+        $totalQty = 0;
+        $basemat='';
+        foreach ($data['stock'] as $s) {
+            $totalqtyitemized[$s['Material']]=(isset($totalqtyitemized[$s['Material']])?$totalqtyitemized[$s['Material']]:0)+floatval($s['StockQuantity']);
+            $totalQty += floatval($s['StockQuantity']);
+            $basemat=$s['basesku'];
+		if($basemat=='') $basemat=$s['Material'];
+	if($skutoredirect==0){$skutoredirect=$basemat;}
+	
+        }
+    ?>
     <div class="table-responsive">
         <h2 class="table-heading">Inventory</h2>
         <table id="inventory-table" class="table table-bordered text-center">
@@ -42,6 +47,7 @@ $backlogMainTable = array(
                 <th><?php echo __('Purchase Order', 'cabling') ?></th>
                 <th><?php echo __('Remaining Quantity', 'cabling') ?></th>
                 <th><?php echo __('Available Inventory', 'cabling') ?></th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -63,11 +69,43 @@ $backlogMainTable = array(
                 }
                 ?>
                 </td>
+                <td><?php 
+                
+                $prdid= wc_get_product_id_by_sku( $skutoredirect ); 
+                if ($prdid>0)
+                {
+                    $prd = wc_get_product( $prdid );
+                }
+                if(! empty($prd) && ! empty( $prd->get_price() ))
+                { // add to cart btn
+                    ?>
+                    
+                    <a href="<?php echo esc_url( wc_get_cart_url() ); ?>?add-to-cart=<?php echo esc_attr( $prdid ); ?>"
+                        class="add-to-cart-button">
+                        <i class="fa-light fa-shopping-cart me-2 mb-0"></i>
+                        <span style="font-size: 10px"><?php echo __( 'Add to cart', 'cabling' ); ?></span>
+                    </a>
+                        <?php
+                }
+                else //req quote
+                {
+                    ?>
+                    <div data-action="<?php if($prdid>0) {echo esc_attr( $prdid );} ?>"
+                            class="product-request-button show-product-quote mb-0">
+                            <a class="btn btn-primary" href="#"><?php echo __( 'Request a quote', 'cabling' ) ?></a>
+                        </div>
+                    <?php 
+                }
+
+            ?></td>
             </tr>
             </tbody>
         </table>
     </div>
-<?php if($basemat!='' && count($data['stock'])>1){ ?>
+<?php 
+//print_r(json_encode($data));
+if($basemat!='' && count($data['stock'])>1){ 
+    ?>
     <div class="table-responsive">
         <h2 class="table-heading">Alternate SKUs Inventory</h2>
         <table id="inventory-table" class="table table-bordered text-center">

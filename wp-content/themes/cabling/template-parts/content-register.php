@@ -2,13 +2,12 @@
 $email_register = $_POST['register_email'] ?? '';
 
 $active_step = 0;
-if (isset($_GET['code'])) {
-    $data = json_decode(base64_decode($_GET['code']));
+if (isset($_GET['verify'])) {
+    $data = json_decode(base64_decode($_GET['verify']));
     $email = urldecode($data->email);
     $verify = true;
     $active_step = 1;
 }
-
 if (isset($_GET['email'])) {
     $email = $_GET['email'];
     $verify = true;
@@ -158,7 +157,7 @@ $policy_link = "<a style='color: inherit' target='new' href='" . home_url('/priv
                     <label for="company-postcode" class="form-label">Company Postcode<span
                                 class="required">*</span></label>
                 </div>
-                
+
 
                 <?php
                 echo show_product_field('billing_state', array(

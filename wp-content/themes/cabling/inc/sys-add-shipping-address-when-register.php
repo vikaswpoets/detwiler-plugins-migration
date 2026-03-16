@@ -1,27 +1,4 @@
 <?php
-
-add_action('wp_login','gi_update_customer_address_if_empty',9000,2);
-function gi_update_customer_address_if_empty($username,$user){
-
-    $user_id = $user->ID;
-
-    $type = 'shipping';
-    $custom_addresses = get_user_meta($user_id, THMAF_Utils::ADDRESS_KEY, true);
-    $saved_address = THMAF_Utils::get_custom_addresses($user_id, $type);
-    if(!is_array($saved_address)) {
-
-        if(!is_array($custom_addresses)) {
-            $custom_addresses = array();
-        }
-        $custom_address = array();
-        $default_address = THMAF_Utils::get_default_address($user_id, $type);
-        $custom_address['address_0'] = $default_address;
-        $custom_addresses[$type] = $custom_address;
-
-        update_user_meta($user_id, THMAF_Utils::ADDRESS_KEY, $custom_addresses);
-    }
-}
-
 /*
 User registration Addresses  - invoicing and shipping, by default are the same
 */

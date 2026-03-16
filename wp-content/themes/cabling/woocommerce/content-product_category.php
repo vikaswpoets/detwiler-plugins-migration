@@ -32,7 +32,7 @@ $product_link = get_product_filter_link();
 $col_number = 0;
 
 $user_id = get_current_user_id();
-$wishlist_products = get_user_meta( $user_id, 'wishlist_products', true );
+$wishlist_products = get_user_wishlist($user_id);
 $class = '';
 
 if ( is_array( $wishlist_products ) && in_array( $product->get_id(), $wishlist_products ) ) {
@@ -44,8 +44,9 @@ $class_name = 'product-tr-'.( $product_index % 2 );
 <tr class="<?=$class_name; ?> product-row <?php echo implode(' ', $filterValues) ?>">
     <?php foreach ($fieldList as $key => $attribute): $col_number++; ?>
         <?php $value = get_product_field($key, $product->get_id()); ?>
-        <?php if ($key === '_sku'): ?>
-            <td><a href="<?php echo esc_url($product_link); ?>"><?php echo $value ?? '---' ?></td>
+        <?php if ($key === 'surface_name'): ?>
+            <td class="has-text-align-center"
+           data-align="center" ><?php echo get_the_title($product->get_id()) ?></td>
         <?php else: ?>
             <td class="has-text-align-center"
                 data-filter="<?php echo $key ?>"

@@ -52,5 +52,5 @@ $wrapper_classes   = apply_filters(
 		do_action( 'woocommerce_product_thumbnails' );
 		?>
 	</div>
-    <?php echo cabling_woocommerce_description() ?>
+    <?php echo gi_product_has_surface_equipment($product->get_id()) ? "" : cabling_woocommerce_description() ?>
 </div>

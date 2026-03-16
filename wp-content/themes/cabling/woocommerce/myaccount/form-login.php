@@ -24,16 +24,15 @@ do_action('woocommerce_before_customer_login_form'); ?>
 <div class="login-imgs">
     <div style="text-align:center">
         <img src="/wp-content/uploads/2024/08/img0.png" style="max-height:300px"><img>
-        <img src="/wp-content/uploads/2024/08/img1.png" style="max-height:300px"><img>
+        <img src="/wp-content/uploads/2026/02/Production-Equipment.jpg" style="max-height:300px"><img>
     </div>
 </div>
 <header class="page-header d-flex">
 
-    <h1 class="entry-title"><?php echo __('Datwyler My Account: Buy O-Rings Online, 24/7', 'cabling') ?></h1>
+    <h1 class="entry-title"><?php echo __('Datwyler My Account: Buy Datwyler’s Parco O-Rings and Double E Production Equipment Online, 24/7', 'cabling')// echo get_the_title() ?></h1>
     
     <h4>
-Choose from an extensive range of O-Rings available for purchase online with a valid US delivery address.<br> All it takes to start is to sign in or create your profile on My Account.<br>
-Key tip: <strong>If you’re new to Datwyler, don’t forget to have your resale certificate and W-9 form handy to upload. You’ll need these to complete your purchase.</strong>  
+Choose from an extensive range of O-Rings and production equipment, available for purchase online with a valid US delivery address.<br> All it takes to start is to sign in or create your profile on My Account.
     </h4>   
 </header><!-- .entry-header -->
 

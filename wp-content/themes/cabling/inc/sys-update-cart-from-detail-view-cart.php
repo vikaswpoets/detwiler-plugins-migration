@@ -14,6 +14,45 @@ function update_cart_quantity_by_product_id() {
     $cart_item_key = get_cart_item_key_by_product_id($product_id);
     if ($cart_item_key) {
         WC()->cart->set_quantity($cart_item_key, $quantity);
+
+        // GE-252
+        $current_url = '';
+        if ( ! empty( $_SERVER['HTTP_REFERER'] ) ) {
+            $current_url = esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
+        } elseif ( ! empty( $_SERVER['REQUEST_URI'] ) ) {
+            $current_url = home_url( add_query_arg( [], wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
+        }
+
+        if ( $current_url ) {
+            $parsed = wp_parse_url( $current_url );
+            $query  = [];
+            if ( ! empty( $parsed['query'] ) ) {
+                parse_str( $parsed['query'], $query );
+            }
+
+            $query['detailed-view'] = $quantity;
+
+            $new_url  = $parsed['scheme'] . '://' . $parsed['host'];
+            if ( ! empty( $parsed['port'] ) ) {
+                $new_url .= ':' . $parsed['port'];
+            }
+            if ( ! empty( $parsed['path'] ) ) {
+                $new_url .= $parsed['path'];
+            }
+            if ( ! empty( $query ) ) {
+                $new_url .= '?' . http_build_query( $query );
+            }
+            if ( ! empty( $parsed['fragment'] ) ) {
+                $new_url .= '#' . $parsed['fragment'];
+            }
+
+            $current_url = $new_url;
+        }
+
+        if ( $current_url && strpos( $current_url, wc_get_cart_url() ) === false && WC()->session ) {
+            WC()->session->set( 'dw_continue_shopping_url_last', '' );
+            WC()->session->set( 'dw_continue_shopping_url', $current_url );
+        }
     }
     echo json_encode([
         'msg' => $msg

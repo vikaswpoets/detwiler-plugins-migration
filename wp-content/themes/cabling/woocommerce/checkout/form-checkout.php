@@ -18,7 +18,6 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-
 do_action('woocommerce_before_checkout_form', $checkout);
 
 // If checkout registration is disabled and not logged in, the user cannot checkout.
@@ -32,13 +31,18 @@ if (!$user_id) return;
 $step = !empty($_GET['step']) ? $_GET['step'] : 'shipping';
 
 $customer_level = get_customer_level($user_id);
+$sap_customer_address = get_user_meta($user_id, 'sap_customer_address',true);
 $user_wp9_form = get_user_meta($user_id, 'user_wp9_form', true);
 $user_certificate_form  = get_user_meta($user_id,'user_certificate_form',true);
-$check_remove_tax_by_file = $user_wp9_form && $user_certificate_form ? true : false;
+$check_remove_tax_by_file = $user_wp9_form && $user_certificate_form;
 
 $transportation_companies = get_field('transportation_companies', 'option');
 $user_plant = get_user_meta($user_id, 'sales_org', true);
 $user_plant = $user_plant ? $user_plant : 2141;
+$show_wp_form = $customer_level == 1 && !$check_remove_tax_by_file;
+if ( has_surface_equipment_on_cart() && $customer_level == 2 && !$check_remove_tax_by_file){
+    $show_wp_form = true;
+}
 
 $carriers = [];
 foreach ($transportation_companies as $transportation_companie) {
@@ -83,7 +87,7 @@ if (is_array($custom_address) && count($custom_address)) {
         }
     }
 }
-$customer_level = get_customer_level($customer_id);
+
 $default_shipping_addrerss = isset($addresses[$default_shipping]) ? $addresses[$default_shipping] : [];
 $shipping_country = isset($default_shipping_addrerss['shipping_country']) ? $default_shipping_addrerss['shipping_country'] : '';
 $can_continue = $shipping_country == 'US' ? true : false;
@@ -148,12 +152,12 @@ $can_continue = $shipping_country == 'US' ? true : false;
                             <span><?php _e('Billing', 'cabling') ?></span>
                             <p class="note text-danger"><?php _e('Please note: Delivery only available to the USA', 'cabling') ?></p>
                         </div>
-                        <?php if ($customer_level == 1 && !$check_remove_tax_by_file): ?>
+                        <?php if ($show_wp_form): ?>
                             <div id="user_wp9_form-step-progress"
                                  class="multisteps-form__progress-btn <?= $step == 'user_wp9_form' ? 'js-active' : ''; ?>"
                                  type="button"
                                  title="<?php _e('W9 Form and Resale Certificate', 'cabling') ?>"><span><?php _e('W9 Form and Resale Certificate', 'cabling') ?></span>
-                                <p class="note text-danger">To complete your purchase, you’ll need to upload your company’s resale certificate and W-9. This ensures that there is no tax assessed on your order.</p></div>
+								<p class="note">For tax exempt purchases, please upload both your W-9 and Resale Certificate. Otherwise, taxes may apply.</p></div>
                         <?php endif; ?>
                         <div id="order_review-step-progress"
                              class="multisteps-form__progress-btn <?= $step == 'order_review' ? 'js-active' : ''; ?>"
@@ -243,7 +247,8 @@ $can_continue = $shipping_country == 'US' ? true : false;
                                                                     $carrier_id = $transportation['transportation']['carrier_id'];
                                                                     $carrier_name = $transportation['transportation']['carrier_name'];
                                                                     $organizations = $transportation['transportation']['organizations'];
-                                                                    if (!in_array($user_plant, $organizations)) {
+                                                                    var_dump($organizations);
+                                                                    if (!in_array($user_plant, $organizations) && !in_array('0000', $organizations)) {
                                                                         continue;
                                                                     }
                                                                     ?>
@@ -274,7 +279,7 @@ $can_continue = $shipping_country == 'US' ? true : false;
                              data-animation="scaleIn">
                             <div class="multisteps-form__content">
                                 <div class="woocommerce-billing-details">
-                                    <?php if ($customer_level == 2): ?>
+                                    <?php if ($customer_level == 2 && is_array($sap_customer_address) && count($sap_customer_address)): ?>
                                         <?php wc_get_template_part('checkout/form-billing-sap'); ?>
                                     <?php else: ?>
                                         <?php do_action('woocommerce_checkout_billing'); ?>
@@ -283,13 +288,13 @@ $can_continue = $shipping_country == 'US' ? true : false;
                             </div>
                         </div>
 
-                        <?php if ($customer_level == 1 && !$check_remove_tax_by_file): ?>
+                        <?php if ($show_wp_form): ?>
                             <!--single form panel-->
                             <div id="user_wp9_form-step"
                                  class="multisteps-form__panel <?= $step == 'user_wp9_form' ? 'js-active' : ''; ?>"
                                  data-animation="scaleIn">
-                                
-                                <?php if( !$user_wp9_form ):?> 
+
+                                <?php if( !$user_wp9_form ):?>
                                 <div class="multisteps-form__content">
                                     <?php
                                     $gi_wp_form_9 = apply_filters('woocommerce_checkout_gi_add_wp_form_9', null);
@@ -298,7 +303,7 @@ $can_continue = $shipping_country == 'US' ? true : false;
                                 </div>
                                 <?php endif; ?>
 
-                                <?php if( !$user_certificate_form ):?> 
+                                <?php if( !$user_certificate_form ):?>
                                 <div class="multisteps-form__content mt-5">
                                     <?php wc_get_template_part('checkout/customer-resale-certificate'); ?>
                                 </div>

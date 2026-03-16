@@ -10,10 +10,6 @@
 	<link rel="shortcut icon" href="/favicon.ico" type="image/vnd.microsoft.icon" />
 
     <?php wp_head(); ?>
-<script>function initApollo(){var n=Math.random().toString(36).substring(7),o=document.createElement("script");
-o.src=https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache=+n,o.async=!0,o.defer=!0,
-o.onload=function(){window.trackingFunctions.onLoad({appId:"6952aa4796fc620015954f36"})},
-document.head.appendChild(o)}initApollo();</script>
 </head>
 
 <body <?php body_class(); ?>>

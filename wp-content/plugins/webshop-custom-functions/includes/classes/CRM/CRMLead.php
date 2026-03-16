@@ -241,20 +241,20 @@ class CRMLead
                 if ($bid != "") {
                         switch (strtolower($bid)) {
                                 case "tst":
-                                        //$contact["OwnerPartyID"] = "8000000734";  // DEV TST
-                                        $contact["OwnerPartyID"] = "8000000763";  // PROD TST
+                                        $contact["OwnerPartyID"] = "8000000734";  // DEV TST
+                                        //$rfq["OwnerPartyID"] = "8000000763";  // PROD TST
                                         break;
                                 case "parco":
-                                        //$contact["OwnerPartyID"] = "8000000821";  // DEV PARCO
-                                        $contact["OwnerPartyID"] = "8000001610";  // PROD PARCO
+                                        $contact["OwnerPartyID"] = "8000000821";  // DEV PARCO
+                                        //$rfq["OwnerPartyID"] = "8000001610";  // PROD PARCO
                                         break;
                                 case "double-e":
-                                        //$contact["OwnerPartyID"] = "8000000822";  // DEV Double E
-                                        $contact["OwnerPartyID"] = "8000001601";  // PROD Double E
+                                        $contact["OwnerPartyID"] = "8000000822";  // DEV Double E
+                                        //$rfq["OwnerPartyID"] = "8000001601";  // PROD Double E
                                         break;
                                 case "olympian-machine":
-                                        //$contact["OwnerPartyID"] = "8000000732";  // DEV Olympian
-                                        $contact["OwnerPartyID"] = "8000000762";  // PROD Olympian
+                                        $contact["OwnerPartyID"] = "8000000732";  // DEV Olympian
+                                        //$rfq["OwnerPartyID"] = "8000000762";  // PROD Olympian
                                         break;
                         }
                 }
@@ -262,7 +262,7 @@ class CRMLead
                 {
                     //dev: --> "OwnerPartyID":"8000000790"
                     //prod: --> "OwnerPartyID":"8000001612"
-                    $contact["OwnerPartyID"] = "8000001612";
+                    $contact["OwnerPartyID"] = "8000000790";
                 }
 
 
@@ -390,33 +390,33 @@ class CRMLead
 
         $rfq["Hardness_KUT"] = $product->hardness ?? "N/A";
 
-        $rfq["OwnerPartyID"] = "8000001612";  // PROD default
+        $rfq["OwnerPartyID"] = "8000000790";  // no brand defined by default
 //dev: --> "OwnerPartyID":"8000000790"
 //prod: --> "OwnerPartyID":"8000001612"
 
 		if ($crmsalesquote->getBrand() != "") {
 			switch (strtolower($crmsalesquote->getBrand())) {
 				case "tst":
-					//$rfq["OwnerPartyID"] = "8000000734";  // DEV TST
-					$rfq["OwnerPartyID"] = "8000000763";  // PROD TST
+					$rfq["OwnerPartyID"] = "8000000734";  // DEV TST
+					//$rfq["OwnerPartyID"] = "8000000763";  // PROD TST
 					break;
 				case "parco":
-					//$rfq["OwnerPartyID"] = "8000000821";  // DEV PARCO
-					$rfq["OwnerPartyID"] = "8000001610";  // PROD PARCO
+					$rfq["OwnerPartyID"] = "8000000821";  // DEV PARCO
+					//$rfq["OwnerPartyID"] = "8000001610";  // PROD PARCO
 					break;
 				case "double-e":
-					//$rfq["OwnerPartyID"] = "8000000822";  // DEV Double E
-					$rfq["OwnerPartyID"] = "8000001601";  // PROD Double E
+					$rfq["OwnerPartyID"] = "8000000822";  // DEV Double E
+					//$rfq["OwnerPartyID"] = "8000001601";  // PROD Double E
 					break;
 				case "olympian-machine":
-					//$rfq["OwnerPartyID"] = "8000000732";  // DEV Olympian
-					$rfq["OwnerPartyID"] = "8000000762";  // PROD Olympian
+					$rfq["OwnerPartyID"] = "8000000732";  // DEV Olympian
+					//$rfq["OwnerPartyID"] = "8000000762";  // PROD Olympian
 					break;
 			}
 		}
-		if ($rfq["OwnerPartyID"] == "8000001612" && $product->product == "005") {
-			//$rfq["OwnerPartyID"] = "8000000821";  // DEV PARCO
-			$rfq["OwnerPartyID"] = "8000001610";  // PROD PARCO
+		if ($rfq["OwnerPartyID"] == "8000000790" && $product->product == "005") {
+			$rfq["OwnerPartyID"] = "8000000821";  // DEV PARCO
+			//$rfq["OwnerPartyID"] = "8000001610";  // PROD PARCO
 		}
 
         return json_encode($rfq);
@@ -432,8 +432,9 @@ class CRMLead
 		$lead["LeadType_KUT"] = "105";         // GI Lead – always send this data
 		$lead["Segment"] = "GI";               // GI Business – always send this data
 		$lead["OriginTypeCode"] = "Z11";        // Website – always send this data
-		//$lead["OwnerPartyID"] = "8000000790";  // DEV default
-        $lead["OwnerPartyID"] = "8000000770";  // PROD default
+		//$lead["OwnerPartyID"] = "8000000770";  // no brand defined by default
+        $lead["OwnerPartyID"] = "8000000790";  // no brand defined by default
+        //8000000790
 		if ($brand != "") {
 			switch (strtolower($brand)) {
 				case "tst":

@@ -17,7 +17,8 @@
                 "id": ""
             },
             "placement": "top",
-            "endpoint": 0
+            "endpoint": 0,
+            "selected": 0
         },
         {
             "key": "field_657041a5e924e",
@@ -286,84 +287,6 @@
             "append": ""
         },
         {
-            "key": "field_66fe697a44ec6",
-            "label": "Inches (Backup-Ring)",
-            "name": "",
-            "aria-label": "",
-            "type": "message",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "text-center",
-                "id": ""
-            },
-            "message": "",
-            "new_lines": "wpautop",
-            "esc_html": 0
-        },
-        {
-            "key": "field_66fe693244ec5",
-            "label": "Inches I.D. (Backup-Ring)",
-            "name": "inches_id_backup-ring",
-            "aria-label": "",
-            "type": "text",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "20",
-                "class": "",
-                "id": ""
-            },
-            "default_value": "",
-            "maxlength": "",
-            "placeholder": "",
-            "prepend": "",
-            "append": ""
-        },
-        {
-            "key": "field_66fe69d244ec8",
-            "label": "Inches T (Backup-Ring)",
-            "name": "inches_t_backup-ring",
-            "aria-label": "",
-            "type": "text",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "20",
-                "class": "",
-                "id": ""
-            },
-            "default_value": "",
-            "maxlength": "",
-            "placeholder": "",
-            "prepend": "",
-            "append": ""
-        },
-        {
-            "key": "field_66fe699a44ec7",
-            "label": "Inches Width (Backup-Ring)",
-            "name": "inches_width_backup-ring",
-            "aria-label": "",
-            "type": "text",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "30",
-                "class": "",
-                "id": ""
-            },
-            "default_value": "",
-            "maxlength": "",
-            "placeholder": "",
-            "prepend": "",
-            "append": ""
-        },
-        {
             "key": "field_65767ff93aac7",
             "label": "Milimeters",
             "name": "",
@@ -622,7 +545,8 @@
             },
             "wpml_cf_preferences": 1,
             "placement": "top",
-            "endpoint": 0
+            "endpoint": 0,
+            "selected": 0
         },
         {
             "key": "field_65703f7467eaa",
@@ -709,7 +633,8 @@
             },
             "wpml_cf_preferences": 1,
             "placement": "left",
-            "endpoint": 0
+            "endpoint": 0,
+            "selected": 0
         },
         {
             "key": "field_655c7435de884",
@@ -748,7 +673,8 @@
             },
             "wpml_cf_preferences": 1,
             "placement": "left",
-            "endpoint": 0
+            "endpoint": 0,
+            "selected": 0
         },
         {
             "key": "field_655c744cde885",
@@ -808,7 +734,8 @@
             },
             "wpml_cf_preferences": 1,
             "placement": "left",
-            "endpoint": 0
+            "endpoint": 0,
+            "selected": 0
         },
         {
             "key": "field_655c74b37eec5",
@@ -850,5 +777,6 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1728266518
+    "display_title": "",
+    "modified": 1763352939
 }

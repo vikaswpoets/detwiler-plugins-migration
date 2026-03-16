@@ -2,10 +2,6 @@
     <h4>
         <?php _e('Edit User', 'cabling') ?>
     </h4>
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-        <span class="sr-only"><?php _e('Close', 'cabling') ?></span>
-    </button>
 </div>
 <div class="modal-body">
     <form method="POST" name="update-customer-lv1" id="update-customer-lv1" class="needs-validation">

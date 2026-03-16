@@ -20,15 +20,11 @@ get_header();
 
 					<div class="page-content text-center">
 						<p>
-						The page you're looking for might have been moved or no longer exists. <br>
-						But don't worry, we're here to help!
+							Our apologies…the page you’re looking for might have moved or no longer exists.<br><br>
+
+							But we’re here to help. You can get back to the <a href="<?= home_url(); ?>">Homepage</a> or feel free to <a href="<?= home_url('/contact-form'); ?>">Contact Us</a> if you need any assistance.
 						</p>
 						<p>
-						You can:
-						<br><br>
-						Return to our <a href="<?= home_url(); ?>">Homepage</a><br>
-						Explore <a href="<?= home_url('/products-and-services'); ?>">our Product</a><br>
-						Or <a href="<?= home_url('/contact-form'); ?>">Contact Us</a> for further assistance.
 						<br><br>
 						Thank you for visiting Datwyler Sealing!
 						</p>

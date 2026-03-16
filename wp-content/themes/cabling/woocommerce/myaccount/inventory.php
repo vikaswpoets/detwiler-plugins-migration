@@ -1,9 +1,55 @@
 <h2>Inventory, Lead Time and Pricing</h2>
 <form id="webservice-api-form">
+    <?php
+//if customer has more than one sales organization
+    //select from all sales orgs
+    $userid=get_current_user_id();
+
+    $AccountID = get_user_meta($userid, 'AccountID', true);
+    $salesorgs = get_user_meta($userid, 'sales_org_lst', true); 
+    if($AccountID && empty($salesorglst))
+    {
+        // retrieve list of sales org. for customer
+        $crmxx = new CRMController();
+        $salesorglst=$crmxx->getMultipleSalesOrganization($AccountID);
+        //$salesorglst=$crmxx->getMultipleSalesOrganization(1004628);
+        if($salesorglst){
+            update_user_meta($userid, 'sales_org_lst', $salesorglst);
+        }
+    }   
+    //print_r($salesorgs);
+    $c=0;
+    //check if user has access to both Parco and Double E
+    foreach($salesorgs as $org)
+    {
+        if($org['id']==2141 || $org['id']==2142){
+            $c++;
+        }
+    }
+
+    if(!empty($salesorgs) && count($salesorgs)>1 && $c>1)
+    {
+        //echo "<p><strong>Select the factory</strong></p>";
+        ?>
+        <p><strong>Select Origin</strong></p>
+        <div class="form-group">
+            <select  class="form-control chosen-select" name="api[salesorg]" id="salesorg">
+        <?php 
+        foreach($salesorgs as $org)
+        {
+            if($org['id']==2141 || $org['id']==2142){
+                echo "<option value=\"".$org['id']."\">".$org['name']??$org['id']."</option>";
+            }
+        }
+    ?>            
+        </select>
+    </div>
+    <?php
+    }
+    ?>
     <p class="form-error-text alert alert-danger mb-4 hidden"><i class="fa-solid fa-triangle-exclamation me-2"></i>Please fill out the filter</p>
     <p class="parcocompound-text alert alert-danger mb-4 hidden"><i class="fa-solid fa-triangle-exclamation me-2"></i>Please fill out the Part Number and Compound Number</p>
-<p><strong>For Datwyler’s Parco O-Rings, you can use either the SKU / material number or part and compound number</strong></p>
-<!--    <p><strong>For products from Vandalia, please use the product’s SKU / material number; for Ontario products, you can use either the SKU / material number or part and compound number</strong></p> -->
+    <p><strong>For Datwyler’s Parco O-Rings, you can use either the SKU / material number or part and compound number</strong></p>
     <div class="form-group">
         <input type="text" class="form-control" name="api[SoldToParty]" id="SoldToParty"
                value="<?php echo get_user_meta(get_current_user_id(), 'sap_customer', true)?>"

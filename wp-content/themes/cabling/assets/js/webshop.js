@@ -3,7 +3,6 @@
     add_phone_validate('#user_telephone');
     add_phone_validate('#contact-phone');
     checkMyAccountNavigation();
-    product_filter_init();
     sortList('download-list', 'data-order', 'asc');
 
     $(document).on('change', 'input[name="existing-customer"]', function () {
@@ -316,56 +315,6 @@
         blog_filter_ajax();
     });
 
-    const filter_product_tag = $('.product-service-page');
-    filter_product_tag.on('change', 'input[name=product_group], input[type=checkbox], input[type=radio]', function (e) {
-        const thisInput = $(this);
-        const groupTypeField = $(e.delegateTarget).find('input[data-name=group-type]:checked')
-        $(e.delegateTarget).removeClass(['group-8627', 'group-8641'])
-        if (!groupTypeField || groupTypeField.length === 0 ){
-            $(e.delegateTarget).removeClass('has-group')
-        } else {
-            $(e.delegateTarget).addClass(['has-group', `group-${groupTypeField.val()}`])
-            if (groupTypeField.val() === '8627'){
-                $('.size-oring').fadeIn('fast');
-                $('.size-backup-ring').fadeOut('fast');
-                $('.size-backup-ring').find('input[type=checkbox]').prop('checked', false)
-            } else {
-                $('.size-oring').fadeOut('fast');
-                $('.size-backup-ring').fadeIn('fast');
-                $('.size-oring').find('input[type=checkbox]').prop('checked', false)
-            }
-        }
-        if (thisInput.attr('name') === 'product_type' && 'Custom' === $(this).val()) {
-            showLoading();
-            $('.woocommerce-product-type-custom').show();
-            $('.breadcrumbs-filter span').hide();
-            $('.heading .total').hide();
-            $('.woocommerce-no-products-found').hide();
-            $('#filtered-category-container').empty();
-            hideLoading();
-        } else {
-            $('.woocommerce-product-type-custom').hide();
-            product_filter_ajax();
-        }
-        setActiveCheckbox.call(this);
-
-        const targetElement = $('#filtered-category-container');
-
-        // Use animate to smoothly scroll to the target element
-        $('html, body').animate({
-            scrollTop: targetElement.offset().top - 200
-        }, 'slow');
-    });
-
-    filter_product_tag.on('click', '.cat-item', function () {
-        const cat_id = $(this).attr('data-category');
-        product_filter_ajax(cat_id);
-    });
-
-    $('.filter-blog').on('focusout', '.custom-size', function () {
-        product_filter_ajax();
-    });
-
     $('.product-variable-filter').on('change', 'input[type=checkbox]', function () {
         showLoading();
         $('input[name=paged]').val(1);
@@ -552,55 +501,87 @@
     if ($('body').hasClass('page-id-129043')) {
         gtag('event', 'Contact_Engagement');
     }
+    // GE-224 Duplicate Leads
     if (wpcf7Elm) {
         wpcf7Elm.addEventListener('wpcf7mailsent', function (event) {
-			var redir="/thank-you/";
-			gtag('event', 'Contact_Completed');
-			if(window.location.href.includes('/contact-us-oil-gas-sealing-solutions'))
-			{
-				redir="/thank-you-oilgas/";
-			}else if(window.location.href.includes('/contact-us-oil-gas-sealing-solutions-machined-metal'))
-			{
-				redir="/thank-you-oilgas-machined-metal/";
-			}else if(window.location.href.includes('/contact-us-oil-gas-sealing-solutions-seals'))
-			{
-				redir="/thank-you-oilgas-seals/";
-			}else if(window.location.href.includes('/contact-us-aerospace-sealing-solutions'))
-			{
-				redir="/thank-you-aerospace/";
-			} /*
-			else
-			{
-					redir="/thank-you-all/";
-			}
-			*/
-			if (redir!="/thank-you/"){
-				window.location.href = redir;
+            const submitButton = wpcf7Elm.querySelector('.wpcf7-submit');
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+            var redir = "/thank-you/";
+            var eventName = "Contact_Completed"; // default
+
+            if (window.location.href.includes('/contact-us-oil-gas-sealing-solutions-machined-metal')) {
+                redir = "/thank-you-oilgas-machined-metal/";
+                eventName = "OG_MM_Contact_Completed";
+            } else if (window.location.href.includes('/contact-us-oil-gas-sealing-solutions-seals')) {
+                redir = "/thank-you-oilgas-seals/";
+                eventName = "OG_Seals_Contact_Completed";
+            } else if (window.location.href.includes('/contact-us-oil-gas-sealing-solutions')) {
+                redir = "/thank-you-oilgas/";
+                eventName = "OG_Contact_Completed";
+            } else if (window.location.href.includes('/contact-us-aerospace-sealing-solutions')) {
+                redir = "/thank-you-aerospace/";
+                eventName = "Aerospace_Contact_Completed";
+            }
+             /*
+            else
+            {
+                    redir="/thank-you-all/";
+            }
+            */
+            gtag('event', eventName);
+
+            if (redir!="/thank-you/"){
+                window.location.href = redir;
+                //redirectToUrl(redirectUrl);
             } else {
-				if (event?.detail?.apiResponse?.ignore_confirm) {
-					const message = event?.detail?.apiResponse?.message ?? '';
-					$('#modalMessage .message-content').html(message);
-					openModal('modalMessage');
-				} else {
-					openModal('modalSuccess');
-				}
-			}
+                if (event?.detail?.apiResponse?.ignore_confirm) {
+                    const message = event?.detail?.apiResponse?.message ?? '';
+                    $('#modalMessage .message-content').html(message);
+                    openModal('modalMessage');
+                } else {
+                    openModal('modalSuccess');
+                }
+            }
         }, false);
         wpcf7Elm.addEventListener('wpcf7spam', function (event) {
+            const submitButton = wpcf7Elm.querySelector('.wpcf7-submit');
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
             openModal('modalError');
         }, false);
         wpcf7Elm.addEventListener('wpcf7invalid', function (event) {
-			openModal('modalErrorValidation');
-            //openModal('modalError');
+            const submitButton = wpcf7Elm.querySelector('.wpcf7-submit');
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+            openModal('modalErrorValidation');
         }, false);
         wpcf7Elm.addEventListener('wpcf7mailfailed', function (event) {
+            const submitButton = wpcf7Elm.querySelector('.wpcf7-submit');
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
             openModal('modalError');
         }, false);
         wpcf7Elm.addEventListener('wpcf7submit', function (event) {
+            const submitButton = wpcf7Elm.querySelector('.wpcf7-submit');
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
             if (event.detail.status === 'wpcf7invalid') {
                 openModal('modalError');
             }
             gtag('event', 'Contact_Engagement');
+        }, false);
+
+        wpcf7Elm.addEventListener('wpcf7beforesubmit', function(event) {
+            const submitButton = wpcf7Elm.querySelector('.wpcf7-submit');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
         }, false);
     }
 
@@ -657,26 +638,18 @@
             $('.multisteps-form__progress-btn').removeClass('js-active');
             $('#carrier-step-progress').addClass('js-active');
             $('#carrier-step').addClass('js-active');
-            // Set default fedex method
-            // updateShippingMethod(fedex_method);
         }
         return false;
     })
     $(document).on('click', '#carrier_type_fedex', function () {
-        // showLoading();
         updateShippingMethod(fedex_method);
     })
     $(document).on('click', '#carrier_type_free', function () {
-        // showLoading();
         updateShippingMethod(free_shipping);
     })
     $(document).on('change', 'select[name="carrier_id"]', function () {
-        // showLoading();
         updateShippingMethod(free_shipping);
     })
-    // if( $('body').hasClass('woocommerce-checkout') ){
-    //     updateShippingMethod(fedex_method);
-    // }
     // End GID-1050
 
     // Handle billing-step next
@@ -754,38 +727,8 @@
                         var selectedShipping = $('input[name="carrier_type"]:checked').val();
                         $('body').find('.shipping_method').prop('checked', false);
                         $('body').find('.shipping_method[value="' + selectedShipping + '"]').prop('checked', true);
-                        // $('body').find('.shipping_method[name="shipping_method[0]"]').val(selectedShipping);
                         $('body').trigger('update_checkout');
 
-/*  New simulation is not needed, we already have this data
-                        const rawData = response.data;
-                        let status = '';
-                        let flag = 1;
-                        if (rawData.length > 0) {
-                            $('.cart_item').each(function (index) {
-                                const _this = $(this);
-                                const stock = rawData[index].stock;
-                                const quantity = rawData[index].quantity;
-
-                                const instock=rawData[index].in_stock;
-                                if(instock)
-                                {
-                                    status = 'In Stock: We estimate to have the products ready for shipping in the next 24 hours';
-                                }else{
-                                    status = 'Out of Stock: We estimate to have the products ready for shipping in the next 10-14 days';
-                                    flag = 2;
-                                    $('.woocommerce-checkout-review-order-table').addClass('removeSize')
-                                }
-                                _this.find('.product-stock').text(status);
-
-                            });
-                        }
-                        if (flag == 1) {
-                            $('.stock-total-checkout').text('In Stock: We estimate to have the products ready for shipping in the next 24 hours.cccc');
-                        } else {
-                            $('.stock-total-checkout').text('Out of Stock: We estimate to have the products ready for shipping in the next 10-14 days.dddd');
-                        }
-*/
                         localStorage.setItem('cabling_get_api_ajax_checkout',1);
                     }
                 },
@@ -812,62 +755,44 @@
     })
 
     $(document).on('click', '.continue-to-summary', function () {
-        $('.woocommerce #payment #place_order, .woocommerce-page #payment #place_order').addClass('disable');
-        var formData = new FormData();
-        if( $('#formFileW9').length ){
-            var fileInput = $('#formFileW9')[0].files[0];
-            formData.append('formFileW9', fileInput);
+        if ($('#formFileW9').length && $('#formFileCertificate').length && $('#formFileW9')[0].files[0] && $('#formFileCertificate')[0].files[0]){
 
-            if (!fileInput) {
-                alert('Both files are required. Please upload both the W9 form and the Certificate.');
-                return false;
-            }
-        }
-        if( $('#formFileCertificate').length ){
-            var formFileCertificate = $('#formFileCertificate')[0].files[0];
+            $('.woocommerce #payment #place_order, .woocommerce-page #payment #place_order').addClass('disable');
+            const formData = new FormData();
+
+            const fileInput = $('#formFileW9')[0].files[0];
+            const formFileCertificate = $('#formFileCertificate')[0].files[0];
+
+            formData.append('formFileW9', fileInput);
             formData.append('formFileCertificate', formFileCertificate);
 
-            if (!formFileCertificate) {
-                alert('Both files are required. Please upload both the W9 form and the Certificate.');
-                return false;
-            }
+            formData.append('action', 'w9_form_ajax');
+            $.ajax({
+                url: CABLING.ajax_url,
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.success == true) {
+                        $('.woocommerce #payment #place_order, .woocommerce-page #payment #place_order').addClass('place-order-upload');
+
+                        showCheckoutPayment();
+                    }else
+                    {
+                        alert('Invalid File Type! Only pdf, jpg, gif, png files are allowed.');
+                        return false;
+                    }
+                    $('.woocommerce #payment #place_order, .woocommerce-page #payment #place_order').removeClass('disable');
+                },
+                error: function (response) {
+                    alert('File upload error. Please try again!');
+                    return false;
+                }
+            });
+        } else {
+            showCheckoutPayment();
         }
-        formData.append('action', 'w9_form_ajax');
-        // const $ = jQuery.noConflict();
-		/*
-        $('.multisteps-form__progress-btn').removeClass('js-active');
-        $('.multisteps-form__panel').removeClass('js-active');
-
-        $('#order_review-step-progress').addClass('js-active');
-        $('#order_review-step').addClass('js-active');
-		*/
-        $.ajax({
-            url: CABLING.ajax_url,
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            success: function (response) {
-                $('body').trigger('update_checkout');
-                if (response.success == true) {
-                    $('.woocommerce #payment #place_order, .woocommerce-page #payment #place_order').addClass('place-order-upload');
-					$('.multisteps-form__progress-btn').removeClass('js-active');
-					$('.multisteps-form__panel').removeClass('js-active');
-
-					$('#order_review-step-progress').addClass('js-active');
-					$('#order_review-step').addClass('js-active');
-                }else
-				{
-					alert('Invalid File Type! Only pdf, jpg, gif, png files are allowed.');
-					return false;
-				}
-                $('.woocommerce #payment #place_order, .woocommerce-page #payment #place_order').removeClass('disable');
-            },
-            error: function (response) {
-				alert('File upload error. Please try again!');
-                return false;
-            }
-        });
     })
     $(document).on('click', '.user-edit-account-upload-wp_form_9', function () {
         var fileInput = $('#formFileW9')[0].files[0];
@@ -923,6 +848,52 @@
 
 })(jQuery);
 
+function showCheckoutPayment() {
+    const $j = jQuery;
+
+    const shippingRadio = $j('input[name="select-shipping-address"]:checked');
+
+    let addressObject;
+    if (shippingRadio.length) {
+        const dataAddressStr = shippingRadio.closest('.address-item').attr('data-address');
+        addressObject = JSON.parse(dataAddressStr);
+    }
+
+    $j('#order_review-step').find('.woocommerce-error').remove();
+
+    $j.ajax({
+        url: CABLING.ajax_url,
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            action: 'gi_calculate_tax',
+            data: addressObject,
+        },
+        beforeSend: function () {
+            showLoading();
+        },
+        success: function (response) {
+            if (!response.success && response.data) {
+
+                $j('#order_review').before(
+                    '<div class="woocommerce-error" role="alert">' +
+                        response.data +
+                    '</div>'
+                );
+            }
+        }
+    }).then(function () {
+        $j('body').trigger('update_checkout');
+
+        $j('.multisteps-form__progress-btn').removeClass('js-active');
+        $j('.multisteps-form__panel').removeClass('js-active');
+        $j('#order_review-step-progress').addClass('js-active');
+        $j('#order_review-step').addClass('js-active');
+
+        hideLoading();
+    });
+}
+
 function show_checkout_shipping() {
     const $ = jQuery.noConflict();
     $('.multisteps-form').find('.woo-notice').remove();
@@ -933,8 +904,9 @@ function show_checkout_shipping() {
         $('#user_wp9_form-step-progress').addClass('js-active');
         $('#user_wp9_form-step').addClass('js-active');
     } else {
-        $('#order_review-step-progress').addClass('js-active');
-        $('#order_review-step').addClass('js-active');
+        showCheckoutPayment();
+        // $('#order_review-step-progress').addClass('js-active');
+        // $('#order_review-step').addClass('js-active');
     }
 }
 
@@ -943,7 +915,6 @@ function show_checkout_billing() {
     $('.multisteps-form__progress-btn').removeClass('js-active');
     $('.multisteps-form__panel').removeClass('js-active');
 
-    // $('.multisteps-form__progress-btn:nth-child(3)').addClass('js-active');
     $('#billing-step-progress').addClass('js-active');
     $('#billing-step').addClass('js-active');
 }
@@ -971,25 +942,6 @@ function sortList(element, name, order) {
     }
 }
 
-function setActiveCheckbox() {
-    const $ = jQuery.noConflict();
-    const formCheckbox = $(this).closest('.accordion-body').find('.form-check');
-    let checkedTotal = 0;
-    //formCheckbox.removeClass('in-active');
-    formCheckbox.each(function () {
-        if ($(this).find('input').is(':checked')) {
-            $(this).removeClass('in-active');
-            checkedTotal++;
-        } else {
-            $(this).addClass('in-active');
-        }
-    });
-
-    if (checkedTotal === 0) {
-        formCheckbox.removeClass('in-active');
-    }
-    console.log(formCheckbox, checkedTotal)
-}
 
 function showSingleTable(order) {
     const $ = jQuery.noConflict();
@@ -1015,41 +967,52 @@ function showSingleTable(order) {
 }
 
 function checkMyAccountNavigation() {
-    const $ = jQuery.noConflict();
-    const myAccount = $('.woocommerce-MyAccount-navigation-link--edit-account');
-    const myAccountDashboard = $('.woocommerce-MyAccount-navigation-link--dashboard');
-    const myAccountAddress = $('.woocommerce-MyAccount-navigation-link--edit-address');
-    const myAccountInfo = $('.woocommerce-MyAccount-navigation-link--setting-account');
-    const myAccountManager = $('.woocommerce-MyAccount-navigation-link--users-management');
-    const myAccountBacklog = $('.woocommerce-MyAccount-navigation-link--sales-backlog');
-    const myAccountInventory = $('.woocommerce-MyAccount-navigation-link--inventory');
-    const myAccountShipment = $('.woocommerce-MyAccount-navigation-link--shipment');
-    if (myAccountDashboard.length) {
-        if (myAccount.hasClass('is-active')
-            || myAccountDashboard.hasClass('is-active')
-            || myAccountAddress.hasClass('is-active')
-            || myAccountInfo.hasClass('is-active')
-            || myAccountManager.hasClass('is-active')
-            || myAccountBacklog.hasClass('is-active')
-            || myAccountInventory.hasClass('is-active')
-            || myAccountShipment.hasClass('is-active')
-        ) {
-            myAccountAddress.fadeIn('fast');
-            myAccountInfo.fadeIn('fast');
-            myAccountManager.fadeIn('fast');
-            myAccountBacklog.fadeIn('fast');
-            myAccountInventory.fadeIn('fast');
-            myAccountShipment.fadeIn('fast');
-            myAccount.fadeIn('fast');
-        }
-
-        myAccount.addClass('has-tooltip').find('a').attr('data-title', 'Update your details and preferences');
-        myAccountInfo.addClass('has-tooltip').find('a').attr('data-title', 'Update your preferences for receiving news and updates about Datwyler Industrial Sealing');
-        myAccountBacklog.addClass('has-tooltip').find('a').attr('data-title', 'See details about past and open purchase orders');
-        myAccountInventory.addClass('has-tooltip').find('a').attr('data-title', 'See item inventory, pricing and lead times for ordering');
-        myAccountManager.addClass('has-tooltip').find('a').attr('data-title', 'Add new user associate to this account');
-        myAccountShipment.addClass('has-tooltip').find('a').attr('data-title', 'See the items shipped in the last 12 months');
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery is required but not loaded');
+        return;
     }
+    const $ = jQuery;
+
+    const $dashboard = $('.woocommerce-MyAccount-navigation-link--dashboard');
+    if (!$dashboard.length) {
+        return;
+    }
+
+    const navigationElements = {
+        'edit-account': 'Update your details and preferences',
+        'edit-address': 'Billing/Shipping Address',
+        'setting-account': 'Update your preferences for receiving news and updates about Datwyler Industrial Sealing',
+        'sales-backlog': 'See details about past and open purchase orders',
+        'inventory': 'See item inventory, pricing and lead times for ordering',
+        'users-management': 'Add new user associate to this account',
+        'shipment': 'See the items shipped in the last 12 months'
+    };
+
+     const $navigationItems = Object.keys(navigationElements)
+        .map(key => $(`.woocommerce-MyAccount-navigation-link--${key}`))
+        .filter($el => $el.length > 0);
+
+    const isDashboardActive = $dashboard.hasClass('is-active');
+    const hasActiveNavElement = Object.keys(navigationElements).some(key =>
+        $(`.woocommerce-MyAccount-navigation-link--${key}`).hasClass('is-active')
+    );
+
+    if (isDashboardActive || hasActiveNavElement) {
+        $navigationItems.forEach($el => $el.show());
+    } else {
+        $navigationItems.forEach($el => $el.hide());
+    }
+
+    // Setup tooltips
+    Object.entries(navigationElements).forEach(([key, tooltip]) => {
+        const $element = $(`.woocommerce-MyAccount-navigation-link--${key}`);
+        if ($element.length) {
+            $element
+                .addClass('has-tooltip')
+                .find('a')
+                .attr('data-title', tooltip);
+        }
+    });
 }
 
 function checkPasswordStrength(password) {
@@ -1136,220 +1099,87 @@ function blog_filter_ajax(load_more = false) {
         });
 }
 
-function product_filter_init() {
-    const $ = jQuery.noConflict();
-    const form = $('.woo-sidebar').find('form');
-
-    const preFilterInput = form.find('.pre_filter');
-    if (preFilterInput.length) {
-        preFilterInput.each(function () {
-            const filterName = $(this).data('action');
-            const filterItem = $(`.filter-${filterName}`);
-            const filterValue = $(this).val();
-            if (filterItem.length) {
-                const arrayValue = filterValue.split(",");
-                filterItem.find('.form-check-input').each(function () {
-                    if (arrayValue.includes($(this).val())) {
-                        $(this).prop('checked', true);
-                    } else {
-                        if (!filterName.includes('dash_number')) {
-                            $(this).closest('.form-check').remove();
-                        }
-                    }
-                })
-            }
-        });
-        product_filter_ajax();
-    }
-
-}
-
-function product_filter_ajax(cat_id) {
-    const $ = jQuery.noConflict();
-    const form = $('.woo-sidebar').find('form');
-
-    add_filter_heading(form);
-
-    const formData = form.serialize();
-    $.ajax({
-        url: CABLING.ajax_url,
-        type: 'POST',
-        dataType: 'json',
-        data: {
-            action: 'cabling_get_products_ajax',
-            data: formData,
-            category: cat_id,
-            nonce: CABLING.nonce
-        },
-        success: function (response) {
-            if (response.data.redirect) {
-                window.location.href = response.data.redirect;
-                return;
-            }
-            $('#filtered-category-container').html(response.data.results);
-            if (response.data.total === 0) {
-                //$('.filter-blog').addClass('no-results');
-                $('.breadcrumbs-filter span').hide();
-                $('.heading .total').hide();
-                $('.woocommerce-product-type-custom').show();
-
-                if (response.data.isSizeFilter) {
-                    $('.text-for-size').show();
-                } else {
-                    $('.text-for-size').hide();
-                }
-            } else {
-                //$('.filter-blog').removeClass('no-results');
-                $('.heading .total').show().find('span').html(response.data.total);
-                $('.breadcrumbs-filter span').html(response.data.category);
-            }
-
-            const filter_meta = response.data.filter_meta;
-            $('.filter-blog').find('.filter-category').each(function () {
-                let that = $(this);
-                let meta_key = that.attr('data-meta-key');
-
-                if (filter_meta !== null && meta_key && !meta_key.includes('dash_number')) {
-                    if (meta_key) {
-                        if (filter_meta.hasOwnProperty(meta_key) && filter_meta[meta_key] && filter_meta[meta_key].includes(that.attr('data-value'))) {
-                            that.show();
-                        } else {
-                            that.hide();
-                        }
-                    }
-                } else {
-                    that.show();
-                }
-            });
-            $('.filter-blog').find('.accordion-item').each(function () {
-                let that = $(this);
-                if (
-                    that.hasClass('filter-size')
-                    || that.hasClass('filter-custom-hardness')
-                    || that.hasClass('filter-inch')
-                    || that.hasClass('filter-attribute')
-                    || that.hasClass('filter-custom-size')
-                    || that.hasClass('filter-millimeter')
-                ) {
-                    return;
-                }
-                that.show();
-                let isHidden = 0;
-                const category = that.find('.filter-category');
-                category.each(function () {
-                    if (!$(this).is(':visible')) {
-                        ++isHidden;
-                    }
-                });
-
-                if (category.length === isHidden) {
-                    that.hide();
-                }
-            })
-
-            hideLoading();
-        },
-        beforeSend: function () {
-            $('.woocommerce-no-products-found').hide();
-            showLoading();
-        }
-    });
-
-    $('.tax-product_custom_type').on('click', '.page-numbers', function (e) {
-        e.preventDefault();
-
-        const form = $('form#form-filter-type');
-
-        form.find('input[name=paged]').val($(this).text());
-        form.submit();
-        return false
-    })
-}
-
-
-function add_filter_heading(form) {
-    const $ = jQuery.noConflict();
-    const filter = $('#filter-heading-product');
-    filter.find('.item:not(.clear-all)').remove();
-    form.find('input:checked').each(function () {
-        const id = $(this).val();
-        const name = $(this).attr('title');
-        const label = $(this).closest('.accordion-item').find('.accordion-button').text();
-        let type = $(this).attr('name');
-        type = type.replace('[]', '');
-
-        filter.append(`<div class="item item-${type} me-2" data-label="${label.trim()}" data-action="${id}">${name}<span class="clear ms-1"><i class="fa-thin fa-circle-xmark"></i></span></div>`);
-    })
-
-    if (filter.find('.item').length > 1) {
-        filter.addClass('is-multiple');
-    } else {
-        filter.removeClass('is-multiple');
-    }
-}
-
 function add_phone_validate(phone_element) {
     const phoneCodeElement = document.querySelector(phone_element);
-    if (phoneCodeElement !== null) {
-        const parentElement = phoneCodeElement.parentNode;
-        const thisForm = phoneCodeElement.closest('form');
-        const errorMsg = thisForm.querySelector('.input-error');
+    if (!phoneCodeElement) return null;
 
-        let buttonElement;
-        if (thisForm) {
-            buttonElement = thisForm.querySelector('.btn-submit');
+    if (typeof window.intlTelInput === 'undefined') {
+        console.error('intlTelInput library not loaded');
+        return null;
+    }
+
+    const thisForm = phoneCodeElement.closest('form');
+    if (!thisForm) return null;
+
+    const buttonElement = thisForm.querySelector('.btn-submit');
+
+    let parentElement;
+    if (phone_element === '#contact-phone'){
+        parentElement = phoneCodeElement.closest('.phone-wrapper');
+    } else {
+        parentElement = phoneCodeElement.parentNode;
+    }
+    const errorMsg = parentElement.querySelector('.input-error');
+    const phoneNumberInput = parentElement.querySelector('.phone_number');
+    const phoneCodeInput = parentElement.querySelector('.phone_code');
+
+    if (!errorMsg || !phoneNumberInput || !phoneCodeInput) {
+        console.error('Required elements not found');
+        return null;
+    }
+
+    const resetPhoneError = () => {
+        phoneCodeElement.classList.remove("error");
+        errorMsg.textContent = "";
+        errorMsg.classList.add("hidden");
+        if (buttonElement) {
+            buttonElement.disabled = false;
         }
-        const resetPhoneError = () => {
-            phoneCodeElement.classList.remove("error");
-            errorMsg.innerHTML = "";
-            errorMsg.classList.add("hidden");
+    };
+
+    const iti = window.intlTelInput(phoneCodeElement, {
+        initialCountry: "us",
+        separateDialCode: true,
+        preferredCountries: ['us', 'ca'],
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+        customPlaceholder: () => ""
+    });
+
+    const handlePhoneChange = () => {
+        resetPhoneError();
+        const value = phoneCodeElement.value.trim();
+        if (!value) return;
+
+        if (iti.isValidNumber()) {
+            phoneNumberInput.value = value;
             if (buttonElement) {
                 buttonElement.disabled = false;
             }
-        };
-        const iti = window.intlTelInput(phoneCodeElement, {
-            initialCountry: "us",
-            separateDialCode: true,
-            preferredCountries: ['us', 'ca'],
-            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-            customPlaceholder: function (selectedCountryPlaceholder, selectedCountryData) {
-                return "";
-            },
-        });
-
-        phoneCodeElement.addEventListener("change", function () {
-            resetPhoneError();
-            if (phoneCodeElement.value.trim()) {
-                if (iti.isValidNumber()) {
-                    thisForm.querySelector('.phone_number').value = phoneCodeElement.value.trim();
-                    if (buttonElement) {
-                        buttonElement.disabled = false;
-                    }
-                } else {
-                    //parentElement.querySelector('.phone_number').value = '';
-                    phoneCodeElement.classList.add("error");
-                    errorMsg.innerHTML = 'Invalid number';
-                    errorMsg.classList.remove("hidden");
-                    if (buttonElement) {
-                        buttonElement.disabled = true;
-                    }
-                }
+        } else {
+            phoneCodeElement.classList.add("error");
+            errorMsg.textContent = 'Invalid number';
+            errorMsg.classList.remove("hidden");
+            if (buttonElement) {
+                buttonElement.disabled = true;
             }
-            jQuery(jQuery(this)).closest('.form-group').addClass('has-focus');
-        });
+        }
+        phoneCodeElement.closest('.form-group').classList.add('has-focus');
+    };
 
-        phoneCodeElement.addEventListener("countrychange", function () {
-            const countryData = iti.getSelectedCountryData();
-            if (countryData && countryData.dialCode) {
-                thisForm.querySelector('.phone_code').value = countryData.dialCode;
-            }
-            phoneCodeElement.dispatchEvent(new Event("change"));
-        });
+    const handleCountryChange = () => {
+        const countryData = iti.getSelectedCountryData();
+        if (countryData?.dialCode) {
+            phoneCodeInput.value = countryData.dialCode;
+        }
+        phoneCodeElement.dispatchEvent(new Event("change"));
+    };
 
-        phoneCodeElement.style.paddingLeft = "75px";
+    phoneCodeElement.addEventListener("change", handlePhoneChange);
+    phoneCodeElement.addEventListener("countrychange", handleCountryChange);
 
-        return iti;
-    }
+    phoneCodeElement.style.paddingLeft = "75px";
+
+    return iti;
 }
 
 function hideLoading() {
@@ -1376,27 +1206,10 @@ if (jQuery('.wpcf7-form-control-wrap[data-name="contact_marketing_agreed"]').len
 
 // Trigger AJAX update of shipping method
 function updateShippingMethod(methodId) {
-    console.log('methodId', methodId);
-    console.log('shipping_method', jQuery('#shipping_method').find('[name="shipping_method[0]"][value="' + methodId + '"]'));
-    jQuery('#shipping_method').find('[name="shipping_method[0]"]').prop('checked', false);
-    jQuery('#shipping_method').find('[name="shipping_method[0]"][value="' + methodId + '"]').prop('checked', true);
-    jQuery('#shipping_method').find('[name="shipping_method[0]"]').trigger('change')
-    // var data = {
-    //     'shipping_method': methodId,
-    //     'action': 'cabling_update_shipping_method'
-    // };
-    // showLoading();
-    // jQuery.ajax({
-    //     type: 'POST',
-    //     url: wc_checkout_params.ajax_url,
-    //     data: data,
-    //     success: function (response) {
-    //         hideLoading();
-    //     },
-    //     error: function (error) {
-    //         console.error(error);
-    //     }
-    // });
+    const shippingMethod = jQuery('#shipping_method');
+    shippingMethod.find('[name="shipping_method[0]"]').prop('checked', false);
+    shippingMethod.find('[name="shipping_method[0]"][value="' + methodId + '"]').prop('checked', true);
+    shippingMethod.find('[name="shipping_method[0]"]').trigger('change')
 }
 
 // GT-1090
@@ -1457,11 +1270,27 @@ jQuery(document).ready(function () {
     function autocomplete_compound_css() {
         // Add scroll
         setTimeout(() => {
-            jQuery(".ui-autocomplete").css("max-height", "200px");
-            jQuery(".ui-autocomplete").css("overflow-y", "auto");
-            jQuery(".ui-autocomplete").css("overflow-x", "hidden");
-            jQuery("li.ui-autocomplete-category").css("font-weight", "bold");
-            jQuery("li.ui-autocomplete-category").css("padding-left", "5px");
+            try {
+                const $autocomplete = jQuery(".ui-autocomplete");
+                const $categories = jQuery("li.ui-autocomplete-category");
+
+                if ($autocomplete.length) {
+                    $autocomplete.css({
+                        "max-height": "200px",
+                        "overflow-y": "auto",
+                        "overflow-x": "hidden"
+                    });
+                }
+
+                if ($categories.length) {
+                    $categories.css({
+                        "font-weight": "bold",
+                        "padding-left": "5px"
+                    });
+                }
+            } catch (error) {
+                console.error('Error applying autocomplete styles:', error);
+            }
         }, 10);
     }
 
@@ -1476,6 +1305,9 @@ jQuery(document).ready(function () {
                     category: "Write the Compound Number, or select one of the popular compounds below"
                 })), fixedTerm));
                 autocomplete_compound_css();
+            },
+            select: function(event, ui) {
+                jQuery(this).closest('.form-group').addClass('has-focus');
             }
         });
         // Show all items when focus
@@ -1485,3 +1317,9 @@ jQuery(document).ready(function () {
     }
 });
 // END GT-1090
+
+function redirectToUrl(url) {
+    if (url && typeof url === 'string') {
+        window.location.href = url;
+    }
+}

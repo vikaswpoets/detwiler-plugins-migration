@@ -17,6 +17,10 @@
 
 defined( 'ABSPATH' ) || exit;
 
+$is_surface_equipment = false;
+if ( has_surface_equipment_on_cart() ) {
+	$is_surface_equipment = true;
+}
 ?>
 <div class="cart_totals <?php echo ( WC()->customer->has_calculated_shipping() ) ? 'calculated_shipping' : ''; ?>">
 
@@ -57,7 +61,18 @@ defined( 'ABSPATH' ) || exit;
 
 		<?php foreach ( WC()->cart->get_fees() as $fee ) : ?>
 			<tr class="fee">
-				<th colspan="2"><?php echo esc_html( $fee->name ); ?> <i data-bs-toggle="tooltip" data-bs-placement="top" title="Minimum order per O-Ring is $15; for any amount under $15, a minimum order fee for the difference will be calculated at checkout." class="fa fa-info-circle" aria-hidden="true"></i></th>
+				<th colspan="2">
+                    <?php echo esc_html( $fee->name ); ?>
+					<?php if ($is_surface_equipment): ?>
+                        <i data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="The minimum order amount per individual item is $15. For any individual item totalling below $15, the difference between the price and $15 will be included."
+                           class="fa fa-info-circle" aria-hidden="true"></i>
+					<?php else: ?>
+                        <i data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="Minimum order per O-Ring is $15; for any amount under $15, a minimum order fee for the difference will be calculated at checkout."
+                           class="fa fa-info-circle" aria-hidden="true"></i>
+					<?php endif ?>
+                </th>
 				<td data-title="<?php echo esc_attr( $fee->name ); ?>"><?php wc_cart_totals_fee_html( $fee ); ?></td>
 			</tr>
 		<?php endforeach; ?>
@@ -92,7 +107,7 @@ defined( 'ABSPATH' ) || exit;
 					<?php
 				}
 			}
-			
+
 		}
 		?>
 

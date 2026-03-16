@@ -24,7 +24,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         </table>
     </div>
 </div>
-<div><span>* for more information please send a Request for Quote. And if you have any specific packaging requirements, let us know – we can then evaluate any timing and cost impact, based on your needs.</span></div>
 <?php else: ?>
 </ul>
 <?php endif ?>

@@ -26,6 +26,7 @@ $contact_types = get_terms(array('taxonomy' => 'contact_type','parent' => 0));
 			</div>
 		</header><!-- .entry-header -->
 		<br><br>
+		<!--
 			<div class="row" >
 				<div class="col-md-12 divleft" style="padding-top: 20px;" >
 					Your contact request has been successfully submitted.<br>
@@ -33,9 +34,10 @@ $contact_types = get_terms(array('taxonomy' => 'contact_type','parent' => 0));
 					<br><br>
 				</div>
 			</div>
+		-->
 			<div class="row">
 				<div class="wp-block-button text-center">
-					<a href="/" class="wp-block-button__link wp-element-button">RETURN TO HOMEPAGE</a>
+					<a href="/" class="wp-block-button__link wp-element-button">Explore more Datwyler aerospace sealing solutions</a>
 				</div>
 			</div>
 			<div class="row">

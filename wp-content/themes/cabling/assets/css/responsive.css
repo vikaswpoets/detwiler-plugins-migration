@@ -39,8 +39,16 @@
 
     }*/
     .woocommerce div.product div.images .flex-control-thumbs {
-        width: 50%;
+        display: flex;
         margin: 15px auto 0;
+    }
+    .woocommerce div.product div.images .flex-control-thumbs img {
+        height: 80px;
+        object-fit: cover;
+    }
+    .woocommerce div.product div.images .woocommerce-product-gallery__image img {
+        height: 300px;
+        object-fit: contain;
     }
 }
 

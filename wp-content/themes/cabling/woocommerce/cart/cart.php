@@ -38,6 +38,8 @@ if ( $package ) {
 WC()->session->set( 'chosen_shipping_methods', array($free_shipping) );
 
 do_action('woocommerce_before_cart'); ?>
+
+
 <script>
     // Ref GID-1050 - Handle carrier
     var fedex_method = '<?= $fedex_method; ?>';
@@ -159,11 +161,15 @@ do_action('woocommerce_before_cart'); ?>
                                     <?php
                                     echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($_product, $cart_item['quantity']), $cart_item, $cart_item_key); // PHPCS: XSS ok.
                                     ?>
-                                    <span class="product-item-price">
-                                        $ <?= round($_product->get_price()*100,2);?> (price per 100 pieces rounded to two decimal places)
-                                        <i data-bs-toggle="tooltip" data-bs-placement="top" title="Amount per piece may show as $0.00 if per piece cost is below $0.01" class="fa fa-info-circle" aria-hidden="true"></i>
+	                                <?php if (!gi_product_has_surface_equipment($cart_item['product_id'])): ?>
+                                        <span class="product-item-price">
+                                        $ <?= round( $_product->get_price() * 100, 2 ); ?> (price per 100 pieces rounded to two decimal places)
+                                        <i data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Amount per piece may show as $0.00 if per piece cost is below $0.01"
+                                           class="fa fa-info-circle" aria-hidden="true"></i>
                                     </span>
-                                    <span class="product-remove">
+	                                <?php endif ?>
+                                    <span class="product-remove mt-1 d-flex justify-content-end">
                                     <?php
                                     echo apply_filters( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                         'woocommerce_cart_item_remove_link',

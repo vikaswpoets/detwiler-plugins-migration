@@ -35,9 +35,9 @@ provide custom and standard solutions that
 fuse cutting-edge innovation with reliability
 you can trust.
 					<ul>
-<li>Nadcap and AS9100-certified manufacturing</li>
+						<li>Nadcap and AS9100-certified manufacturing</li>
 						<li>Trusted by leading aerospace manufacturers</li>
-						<li>Certifications: ISO 9001, AS9100, AC7115,ISO 17025</li>
+						<li>Certifications: ISO 9001, AS9100, AC7115,ISO 17025</li>						
 					</ul>
 				</div>
 				<div class="col-md-6" style="background-color: #f5f5f5;padding-left: 20px;padding-right: 20px;padding-top: 20px;">

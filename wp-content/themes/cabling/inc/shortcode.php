@@ -12,28 +12,44 @@ function webshop_show_categories_shortcode($atts)
         'meta_filter' => ''
     ), $atts));
 
-    $args = array(
-        'taxonomy' => $atts['taxonomy'],
-        'hide_empty' => false,
-        'parent' => 0,
-        'exclude' => [7889],
-        'orderby' => 'term_order',
-    );
-    if (!empty($atts['meta_filter'])) {
-        $args['meta_query'] = array(
-            array(
-                'key' => 'product_type',
-                'value' => $atts['meta_filter'],
-                'compare' => '=',
+    $taxonomySlug = $atts['taxonomy'];
+    if ($taxonomySlug === 'production_equipment_cat'){
+        //if the taxonomy is product equipment, we will get the product line of surface equipment
+        $args = array(
+            'taxonomy' => 'product_line',
+            'hide_empty' => false,
+            'meta_query' => array(
+                array(
+                    'key' => 'group_category',
+                    'value' => get_surface_equipment_id(),
+                    'compare' => '=',
+                )
             ),
+            'orderby' => 'term_order',
         );
+    } else {
+        $args = array(
+            'taxonomy' => $taxonomySlug,
+            'hide_empty' => false,
+            'parent' => 0,
+            'exclude' => [7889],
+            'orderby' => 'term_order',
+        );
+        if (!empty($atts['meta_filter'])) {
+            $args['meta_query'] = array(
+                array(
+                    'key' => 'product_type',
+                    'value' => $atts['meta_filter'],
+                    'compare' => '=',
+                ),
+            );
+        }
     }
-
     $taxonomies = get_terms($args);
 
     ob_start();
     if (!empty($taxonomies)): ?>
-        <div class="taxonomies-list mt-4 category-block <?php echo 'list-' . $atts['taxonomy']; ?>">
+        <div class="taxonomies-list mt-4 category-block <?php echo 'list-' . $taxonomySlug; ?>">
             <div class="container">
                 <?php if (isset($atts['custom_template']) && $atts['custom_template'] === 'yes'): ?>
                     <?php include get_template_directory() . '/template-parts/shortcode/list-' . $atts['taxonomy'] . '.php' ?>
@@ -127,3 +143,37 @@ function webshop_show_posts_shortcode($atts)
 }
 
 add_shortcode('webshop_show_posts', 'webshop_show_posts_shortcode');
+
+add_shortcode('gi_checkout_alert', 'gi_checkout_alert_callback');
+function gi_checkout_alert_callback( $atts = array() ){
+
+    $atts = shortcode_atts(
+            array(
+                    'contact_url'    => home_url( '/contact-form' ),
+                    'back_label'     => __( 'Go back', 'gi' ),
+                    'contact_label'  => __( 'Contact us', 'gi' ),
+            ),
+            $atts,
+            'gi_checkout_alert'
+    );
+
+    $message     = __( 'Our apologies — we’ve unfortunately encountered an error on our side with your order.', 'gi' );
+    $instruction = __( 'Please press the back button to resubmit — or contact our sales team directly.', 'gi' );
+
+    ob_start();
+    ?>
+    <div class="gi-checkout-alert text-center mb-5">
+        <p><?php echo esc_html( $message ); ?></p>
+        <p><?php echo esc_html( $instruction ); ?></p>
+        <div class="gi-actions mt-5">
+            <a href="#" class="add-to-cart-button gi-back me-3" onclick="history.back(); return false;">
+                <?php echo esc_html( $atts['back_label'] ); ?>
+            </a>
+            <a href="<?php echo esc_url( $atts['contact_url'] ); ?>" class="add-to-cart-button gi-contact">
+                <?php echo esc_html( $atts['contact_label'] ); ?>
+            </a>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}

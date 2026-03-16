@@ -78,7 +78,7 @@ class GI_TaxJar_Integration {
 	    // Don't calculate if the state exists in the ignore list
 	    if ($this->is_ignored_state($customerAddress['state'])) {
 			$this->remove_existing_tax_fee();
-			wp_send_json_error(__( 'Please note that any tax payable on this purchase must be paid by the buyer to the applicable tax authority!', 'cabling' ));
+			wp_send_json_error(__( 'Please note that any tax payable on this purchase must be paid by the buyer to the applicable tax authority.', 'cabling' ));
 	    }
 
 		$this->calculate_taxes( $customerAddress );

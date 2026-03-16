@@ -4108,3 +4108,73 @@ input#mobile-phone {
     padding: calc(.667em + 2px) calc(1.333em + 2px);
     font-size: 1.125em;
 }
+
+/* Surface Equipment Styles */
+.surface-equipment-box-active .filter-attribute-heading,
+.surface-equipment-box-active .filter-attribute {
+    display: none !important;
+}
+.woocommerce div.product form.cart {
+    display: flex;
+    column-gap: .5rem;
+}
+.woocommerce div.product form.cart .button, .add-to-cart-button{
+    border-radius: 0;
+}
+.product-surface-details .table>thead th {
+    color: #000;
+    font-size: 18px !important;
+}
+.product-surface-details .table td {
+    font-size: 18px !important;
+}
+.single-product .show-product-quote {
+    display: inline-block;
+}
+.filter-surface_equipment .heading-application {
+    display: none;
+}
+.filter-active .sellable-productlisting{
+    display: none !important;
+}
+.single-product .product-variation-table .add-to-cart-button {
+    width: 145px;
+    justify-content: center;
+    margin-bottom: 0;
+}
+.list-production-equipment .table tr:nth-child(odd) {
+    background: #cfe6e9
+}
+.list-production-equipment .table>tbody td:first-child{
+    background: #e5e6e8;
+}
+.list-production-equipment .table>tbody td {
+    font-weight: normal;
+    vertical-align: middle;
+    padding: 0 3rem;
+    border-bottom: 30px solid #fff;
+    border-right: 1px solid #fff;
+}
+.list-production_equipment_cat h4 {
+    font-size: 1.75rem;
+}
+.list-production-equipment .taxonomy-featured {
+    object-fit: contain;
+    background: #d6d8d9;
+    min-width: 300px;
+}
+.blog-related .list-production-equipment .wp-block-button .wp-element-button {
+    position: inherit;
+}
+.woocommerce-products-header img {
+    width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+}
+/*HIDE COUNTRY AND LANGUAGE SELECTOR*/
+.country-selector-wrapper, .language-selector {
+    display: none;
+}
+.wishlist-products .product-image img {
+    object-fit: contain;
+}

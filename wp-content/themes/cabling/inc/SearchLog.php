@@ -1,4 +1,7 @@
 <?php
+if ( class_exists( 'SearchLog' ) ) {
+    return;
+}
 
 class SearchLog
 {

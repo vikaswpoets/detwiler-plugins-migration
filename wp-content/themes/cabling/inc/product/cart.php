@@ -181,7 +181,8 @@ function check_cart_product_category( $passed, $product_id, $quantity, $variatio
 
         $common_terms = array_intersect( $current_terms, $existing_terms );
         if ( empty( $common_terms ) ) {
-            wc_add_notice( __( 'You can only buy products on O-Rings or Surface Equipment type.', 'cabling' ), 'error' );
+		//            wc_add_notice( __( 'You can only buy products on O-Rings or Surface Equipment type.', 'cabling' ), 'error' );
+	wc_add_notice( __( "We're working on it, but for now we cannot combine purchases of both O-Rings and Production Equipment into one cart. After you're done this purchase, it's just a few simple steps to place an order from the other category. Thanks for your patience and for choosing us.", 'cabling' ), 'error' );
             return false;
         }
     }

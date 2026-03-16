@@ -56,7 +56,34 @@
 </div><!-- #page -->
 <?php wp_footer(); ?>
 <!-- Tag manager conversion -->
-<script>window.lintrk('track', { conversion_id: 19146777 });
+<script>
+    if (typeof window.lintrk === 'function') {
+        window.lintrk('track', { conversion_id: 19146777 });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const backLink = document.querySelector('a.back-button');
+        if (!backLink) return;
+
+        // Insert a synthetic state so the first Back triggers popstate
+        history.pushState({ blocker: true }, '', location.href);
+
+        let handled = false;
+
+        function onBackPressed(event) {
+            if (handled) return;
+            handled = true;
+
+            // Trigger the click on your back link
+            backLink.click();
+
+            // Clean up so we don't trap the user on this page
+            window.removeEventListener('popstate', onBackPressed);
+        }
+
+        window.addEventListener('popstate', onBackPressed);
+    });
 </script>
+
 </body>
 </html>

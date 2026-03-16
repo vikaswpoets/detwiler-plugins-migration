@@ -64,7 +64,7 @@ remove_action('wp_footer', 'cabling_add_theme_popup');
     get_template_part('template-parts/modal/popup', 'pdf');
     get_template_part('template-parts/modal/popup', 'success');
     get_template_part('template-parts/modal/popup', 'error');
-get_template_part('template-parts/modal/popup', 'errorvalidation');
+	get_template_part('template-parts/modal/popup', 'errorvalidation');
     get_template_part('template-parts/modal/popup', 'message');
 
 remove_action_by_partial_key("wp_footer", 'banner_html');

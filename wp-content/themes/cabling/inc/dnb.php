@@ -39,7 +39,7 @@ function get_dnb_access_token(){
 }
 
 function enqueue_dnb_search_script() {
-    wp_enqueue_style('jquery-ui-css', 'https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css');
+    wp_enqueue_style('jquery-ui-css', get_template_directory_uri() . '/assets/css/jquery-ui.css');
     wp_enqueue_style('dnb-search', get_template_directory_uri() . '/assets/css/dnb-search.css');
     wp_enqueue_script('dnb-search', get_template_directory_uri() . '/assets/js/dnb-search.js', array('jquery'), null, true);
     wp_localize_script('dnb-search', 'dnbSearch', array(

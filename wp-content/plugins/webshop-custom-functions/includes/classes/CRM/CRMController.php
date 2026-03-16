@@ -537,17 +537,9 @@ class CRMController
             $crmcontact->jobtitle = $contactForm['job-title'];
             //$crmcontact->jobfunction = $contactForm['function'];
             $crmcontact->country_list = $contactForm['country_list'];
-
-if(isset($contactForm['function']))
-{
             $crmcontact->jobfunction = $crmcontact->getFunctionCode((string)$contactForm['function'][0]);
-}else
-{
-$crmcontact->jobfunction="Z49";
-}
-
-	$crmcontact->policyAgreed = $contact_marketing_agreed;
-	$crmcontact->agreeTerm = $contact_marketing_agreed;
+			$crmcontact->policyAgreed = $contact_marketing_agreed;
+			$crmcontact->agreeTerm = $contact_marketing_agreed;
         }
 
         return $this->createContactUsLead($crmcontact, $contactForm['your-message'], $contactForm['product']);

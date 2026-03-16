@@ -125,6 +125,26 @@
             "append": ""
         },
         {
+            "key": "field_665415efbc999",
+            "label": "Google Api Key",
+            "name": "google_api_key",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
             "key": "field_66e3b9a84eee2",
             "label": "Buy Online Link",
             "name": "buy_online_link",
@@ -143,6 +163,76 @@
             "placeholder": "",
             "prepend": "",
             "append": ""
+        },
+        {
+            "key": "field_buy_online_link_doublee",
+            "label": "Buy Online Link Double E",
+            "name": "buy_online_link_doublee",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "\/products-and-services\/?data-history=eyJfd3Bub25jZSI6ImQ2N2YxZWRmNzUiLCJhdHRyaWJ1dGVzIjp7InNlbGxhYmxlIjpbIjEiXX0sImdyb3VwLXR5cGUiOiI5MDE3IiwiY2F0ZWdvcnlUeXBlIjoiUFJPRFVDVCJ9",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_67402ffa9aa8c",
+            "label": "Backup Ring Id",
+            "name": "backup_ring_id",
+            "aria-label": "",
+            "type": "taxonomy",
+            "instructions": "",
+            "required": 1,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "taxonomy": "product_group",
+            "add_term": 0,
+            "save_terms": 0,
+            "load_terms": 0,
+            "return_format": "id",
+            "field_type": "select",
+            "allow_null": 0,
+            "bidirectional": 0,
+            "multiple": 0,
+            "bidirectional_target": []
+        },
+        {
+            "key": "field_67402fza9aa8c2010",
+            "label": "Surface Equipment Id",
+            "name": "surface_equipment_id",
+            "aria-label": "",
+            "type": "taxonomy",
+            "instructions": "",
+            "required": 1,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "taxonomy": "product_group",
+            "add_term": 0,
+            "save_terms": 0,
+            "load_terms": 0,
+            "return_format": "id",
+            "field_type": "select",
+            "allow_null": 0,
+            "bidirectional": 0,
+            "multiple": 0,
+            "bidirectional_target": []
         },
         {
             "key": "field_671efb7d24b06",
@@ -269,6 +359,7 @@
                         "id": ""
                     },
                     "layout": "table",
+                    "parent_repeater": "field_66727f3996c94",
                     "sub_fields": [
                         {
                             "key": "field_66727f6896c96",
@@ -326,7 +417,8 @@
                             },
                             "choices": {
                                 "2141": "2141",
-                                "2130": "2130"
+                                "2130": "2130",
+                                "0000": "Others"
                             },
                             "default_value": [
                                 2141
@@ -338,8 +430,139 @@
                             "save_custom": 0,
                             "custom_choice_button_text": "Add new choice"
                         }
-                    ],
-                    "parent_repeater": "field_66727f3996c94"
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "field_tax_nexus_states_oring",
+            "label": "Tax Nexus States(O-rings)",
+            "name": "tax_nexus_states_oring",
+            "aria-label": "",
+            "type": "repeater",
+            "instructions": "Add the US states where tax nexus applies",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "table",
+            "pagination": 0,
+            "min": 0,
+            "max": 0,
+            "collapsed": "",
+            "button_label": "Add State",
+            "rows_per_page": 20,
+            "sub_fields": [
+                {
+                    "key": "field_state_code",
+                    "label": "Code",
+                    "name": "code",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "State abbreviation (e.g., AL, CA, NY)",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "30",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 2,
+                    "placeholder": "AL",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_tax_nexus_states"
+                },
+                {
+                    "key": "field_state_name",
+                    "label": "Name",
+                    "name": "name",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Full state name (e.g., Alabama, California, New York)",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "70",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "Alabama",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_tax_nexus_states"
+                }
+            ]
+        },
+        {
+            "key": "field_tax_nexus_states_doublee",
+            "label": "Tax Nexus States(Double E)",
+            "name": "tax_nexus_states_doublee",
+            "aria-label": "",
+            "type": "repeater",
+            "instructions": "Add the US states where tax nexus applies",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "table",
+            "pagination": 0,
+            "min": 0,
+            "max": 0,
+            "collapsed": "",
+            "button_label": "Add State",
+            "rows_per_page": 20,
+            "sub_fields": [
+                {
+                    "key": "field_state_code",
+                    "label": "Code",
+                    "name": "code",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "State abbreviation (e.g., AL, CA, NY)",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "30",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": 2,
+                    "placeholder": "AL",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_tax_nexus_states"
+                },
+                {
+                    "key": "field_state_name",
+                    "label": "Name",
+                    "name": "name",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "Full state name (e.g., Alabama, California, New York)",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "70",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "placeholder": "Alabama",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_tax_nexus_states"
                 }
             ]
         }
@@ -362,5 +585,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1730210603
+    "modified": 1732259873
 }

@@ -7,7 +7,7 @@ add_filter('woocommerce_available_payment_gateways', 'custom_payment_gateway_bas
 function custom_payment_gateway_based_on_level($available_gateways) {
     $user_id = get_current_user_id();
     $customer_level = get_customer_level($user_id);
-    if( $customer_level == 1 ){
+    if( $customer_level == 1 && isset($available_gateways['chase_paymentech']) ){
         $available_gateways = [
             'chase_paymentech' => $available_gateways['chase_paymentech']
         ];

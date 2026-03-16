@@ -99,7 +99,7 @@ defined( 'ABSPATH' ) || exit;
 					</tr>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<tr class="tax-total">
+				<tr class="tax-total hidden">
 					<th colspan="2"><?php echo esc_html( WC()->countries->tax_or_vat() ); ?></th>
 					<td colspan="2"><?php wc_cart_totals_taxes_total_html(); ?></td>
 				</tr>

@@ -8,7 +8,7 @@
  *
  * @package cabling
  */
-get_header('jm-reduced');
+get_header();
 
 $page_id = get_the_ID(); ?>
     <div id="primary" class="content-area">

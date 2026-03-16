@@ -26,12 +26,13 @@ $contact_types = get_terms(array('taxonomy' => 'contact_type','parent' => 0));
 			</div>
 		</header><!-- .entry-header -->
 		<br>
-<div class="row" >
+			<div class="row" >
 				<div class="col-md-12 text-center" style="padding-top: 20px;" >
 					One of our specialists will review it and get back to you shortly
-					<br><br><br>
+					<br><br>
 				</div>
 			</div>
+			<br>
 			<div class="row">
 				<div class="wp-block-button text-center">
 					<a href="/industries/aerospace/" class="button_link_thank_you wp-element-button">Explore more Datwyler aerospace sealing solutions</a>
