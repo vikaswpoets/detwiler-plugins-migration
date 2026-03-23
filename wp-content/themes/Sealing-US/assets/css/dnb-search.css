@@ -1,0 +1,14 @@
+ul.ui-menu.ui-widget.ui-widget-content.ui-autocomplete.ui-front {
+    z-index: 999999 !important;
+}
+.ui-autocomplete-loading {
+    background: white url("//jqueryui.com/resources/demos/autocomplete/images/ui-anim_basic_16x16.gif") right center no-repeat;
+}
+/* .ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+* html .ui-autocomplete {
+    height: 100px;
+} */

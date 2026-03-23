@@ -1,0 +1,87 @@
+{
+  "key": "group_gi_contact",
+  "title": "GI Contact Block",
+  "fields": [
+    {
+      "key": "field_gi_contact_text",
+      "label": "Contact Text",
+      "name": "contact_text",
+      "type": "textarea",
+      "instructions": "Enter the text/message",
+      "required": 0,
+      "placeholder": "Enter your contact message here...",
+      "rows": 4
+    },
+    {
+      "key": "field_gi_contact_button",
+      "label": "Button Link",
+      "name": "button_link",
+      "type": "group",
+      "layout": "block",
+      "sub_fields": [
+        {
+          "key": "field_gi_contact_button_text",
+          "label": "Button Text",
+          "name": "text",
+          "type": "text",
+          "instructions": "Text to display on the button",
+          "required": 1,
+          "default_value": "Get in touch"
+        },
+        {
+          "key": "field_gi_contact_button_page",
+          "label": "Link to Page",
+          "name": "page",
+          "type": "page_link",
+          "instructions": "Select the page to link to",
+          "required": 1,
+          "allow_null": 0,
+          "multiple": 0,
+          "allow_archives": 0
+        }
+      ]
+    },
+    {
+      "key": "field_gi_contact_styles",
+      "label": "Style Options",
+      "name": "style_options",
+      "type": "group",
+      "layout": "block",
+      "sub_fields": [
+        {
+          "key": "field_gi_contact_bg_color",
+          "label": "Background Color",
+          "name": "background_color",
+          "type": "color_picker",
+          "instructions": "Choose the background color",
+          "required": 0,
+          "default_value": "#db0d1f"
+        },
+        {
+          "key": "field_gi_contact_text_color",
+          "label": "Text Color",
+          "name": "text_color",
+          "type": "color_picker",
+          "instructions": "Choose the text color",
+          "required": 0,
+          "default_value": "#ffffff"
+        }
+      ]
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf/webshop-gi-contact"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": ""
+}

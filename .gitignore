@@ -27,3 +27,10 @@
 !/wp-content/plugins/wdm-csp-customizations/
 !/wp-content/themes/
 !/cron/
+!/wp-content/themes/Sealing-US/
+cron/python-prod.zip
+cron/import_giqa1.sql
+wp-content/themes/cabling.zip
+wp-content/themes/Sealing-US.zip
+wp-content/themes/Sealing-US1.zip
+wp-content/themes/cabling/inc/icode-functions.php.bak

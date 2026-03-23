@@ -1,0 +1,55 @@
+{
+  "key": "group_upcoming_events",
+  "title": "Upcoming Events Block",
+  "fields": [
+    {
+      "key": "field_events_heading",
+      "label": "Heading",
+      "name": "heading",
+      "type": "text",
+      "instructions": "Enter the main heading for the events section",
+      "required": 0,
+      "default_value": "Upcoming Events"
+    },
+    {
+      "key": "field_events_count",
+      "label": "Number of Events",
+      "name": "events_count",
+      "type": "number",
+      "instructions": "Enter the maximum number of upcoming events to display",
+      "required": 0,
+      "default_value": 6,
+      "min": 1,
+      "max": 20,
+      "step": 1
+    },
+    {
+      "key": "field_event_type_filter",
+      "label": "Filter by Event Type",
+      "name": "event_type_filter",
+      "type": "taxonomy",
+      "instructions": "Optionally filter events by specific event types",
+      "required": 0,
+      "taxonomy": "event-type",
+      "field_type": "multi_select",
+      "allow_null": 1,
+      "multiple": 1,
+      "return_format": "id"
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf/webshop-upcoming-events"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": ""
+}

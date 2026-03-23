@@ -1,0 +1,397 @@
+<?php
+class ProductsFilterHandler {
+	private const NONCE_ACTION = 'cabling-ajax-nonce';
+	private array $data = [];
+	private int $productTypeId;
+	private array $product_ids = [];
+	private array $product_compounds = [];
+	private bool $isSizeFilter = false;
+	private string $results = '';
+	private string $categoryType = '';
+	private array $termFilters = [];
+	private array $surfaceIds = [];
+	private int $total = 0;
+	private int $group = 0;
+	private array $surfaceLineIds = [];
+	private array $surfaceLineAvailable = [];
+	//only use on filter second page
+	private array $filterTaxonomy = [];
+
+	public function __construct() {
+		$this->registerHooks();
+	}
+
+	protected function registerHooks(): void {
+		add_action('wp_ajax_cabling_get_products_ajax', [$this, 'handleAjaxRequest']);
+		add_action('wp_ajax_nopriv_cabling_get_products_ajax', [$this, 'handleAjaxRequest']);
+
+		add_action( 'wp_enqueue_scripts', [ $this, 'enqueueScripts' ] );
+
+		add_action('init', [$this, 'maybeClearCache']);
+	}
+
+	public function enqueueScripts(): void {
+		$object = get_queried_object();
+		$product_taxonomies = get_object_taxonomies('product');
+		$backup_ring_id = get_field('backup_ring_id', 'options');
+
+		if ( ! is_page_template( 'templates/product-service.php' ) && !(is_tax() && isset($object->taxonomy) && in_array($object->taxonomy, $product_taxonomies))) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'product-filter',
+			get_template_directory_uri() . '/assets/js/product-filter.js',
+			[ 'jquery', 'cabling-webshop' ],
+			'1.0.0',
+			true
+		);
+
+		wp_localize_script(
+			'product-filter',
+			'productFilterData',
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
+				'ORingId' => $backup_ring_id ?? 0,
+                'surfaceEquipmentId' => get_surface_equipment_id(),
+			]
+		);
+	}
+
+	public function handleAjaxRequest(): void {
+		if (!$this->verifyNonce()) {
+			wp_send_json_error('Invalid nonce.');
+			return;
+		}
+
+		try {
+			$this->initializeRequest();
+			$this->processRequest();
+		} catch (Exception $e) {
+			error_log(sprintf(
+    'ProductsFilterHandler error: %s. Stack trace: %s',
+			    $e->getMessage(),
+			    $e->getTraceAsString()
+			));
+
+			wp_send_json_error(__('An error occurred while processing your request.', 'cabling'));
+		}
+
+		wp_die();
+	}
+
+	private function verifyNonce(): bool {
+		return isset($_REQUEST['nonce']) && wp_verify_nonce($_REQUEST['nonce'], self::NONCE_ACTION);
+	}
+
+	private function initializeRequest(): void {
+		parse_str($_REQUEST['data'], $this->data);
+		$this->productTypeId = $_REQUEST['category'] ?? 0;
+		$this->categoryType = $_REQUEST['category_type'] ?? '';
+        $this->data['attributes'] = ProductsFilterHelper::cleanupNominalSizes($this->data['attributes'] ?? []);
+		if (!empty($this->data['filer_taxonomy_type']) && !empty($this->data['filer_taxonomy_id'])){
+			$this->filterTaxonomy = array(
+				'type' => $this->data['filer_taxonomy_type'],
+				'id' => $this->data['filer_taxonomy_id'],
+			);
+		}
+		if (!empty($this->data['product_line'])){
+			$this->surfaceLineIds = $this->data['product_line'];
+		}
+	}
+
+	private function processRequest(): void {
+		if (empty($this->productTypeId)) {
+			$this->processProductLines();
+		} else {
+			$this->processProductType();
+		}
+
+		$this->processProductMetaData();
+
+        wp_send_json_success([
+			'results' => $this->results,
+			'total' => $this->total,
+			'filter_meta' => $this->resultMetas ?? null,
+			'isSizeFilter' => $this->isSizeFilter,
+			'redirect' => $this->redirect ?? null,
+			'surfaceLineAvailable' => $this->surfaceLineAvailable,
+			//'$this->surfaceIds' => $this->surfaceIds ?? null,
+		]);
+	}
+
+	private function processProductLines(): void {
+		$productGroupIds = $this->getProductGroupIds();
+		$productLines    = $this->getProductLines( $productGroupIds );
+
+//JM 20250831 fix for when no sellable skus are available for the product line picked
+		if (!empty($this->surfaceLineIds) && !empty($productLines)) {
+			$surfaceLineId = $this->surfaceLineIds;
+			$productLines = array_filter($productLines, function($term) use ($surfaceLineId) {
+			    return in_array($term->term_id, $surfaceLineId);
+			});
+		}
+
+		if (isset($productLines) && is_array($productLines)) {
+			ob_start();
+			echo '<div class="row">';
+            foreach ($productLines as $line) {
+                $this->renderProductLine($line);
+            }
+			echo '</div>';
+            $this->results = ob_get_clean();
+		}
+	}
+
+	private function getProductGroupIds(): array {
+		$productGroupIds = [];
+		$this->surfaceIds = [];
+		if (!empty($this->data['group-type'])) {
+			$this->group = $this->data['group-type'];
+			$productGroupIds = [$this->group];
+		}
+		if (!empty($this->data['product_line'])) {
+			$this->surfaceIds = $this->data['product_line'];
+		}
+		return $productGroupIds;
+	}
+
+	private function getProductLines(array $productGroupIds): ?array {
+
+		if (!empty($this->data['attributes'])) {
+			return $this->getProductLinesWithAttributes($productGroupIds);
+		}
+
+		$this->product_ids = ProductsFilterHelper::searchProductByMeta([], $this->group, $this->surfaceIds, $this->filterTaxonomy);
+		return ProductsFilterHelper::getProductLineCategory('product_line', 'group_category', $productGroupIds);
+	}
+
+	private function getProductLinesWithAttributes(array $productGroupIds): ?array {
+		$this->processAttributes();
+		$this->product_ids = ProductsFilterHelper::searchProductByMeta($this->data['attributes'], $this->group, $this->surfaceIds, $this->filterTaxonomy);
+
+		if (!empty($this->data['attributes']['product_contact_media'])) {
+			return $this->getProductLinesFromContactMedia();
+		}
+
+		$productGroupIncludes = $this->getTermsIdsByProduct($this->product_ids, 'product_line');
+		return !empty($productGroupIncludes)
+			? ProductsFilterHelper::getProductLineCategory('product_line', 'group_category', $productGroupIds, false, $productGroupIncludes)
+			: null;
+	}
+	private function getSurfaceLineAvailable(): ?array {
+		$productGroupIds = $this->getProductGroupIds();
+		$this->product_ids = ProductsFilterHelper::searchProductByMeta($this->data['attributes'], $this->group, $this->surfaceIds, $this->filterTaxonomy);
+
+		$productGroupIncludes = $this->getTermsIdsByProduct($this->product_ids, 'product_line');
+        if (!empty($productGroupIncludes)) {
+            $available = [];
+            $lines = ProductsFilterHelper::getProductLineCategory('product_line', 'group_category', $productGroupIds, false, $productGroupIncludes);
+            if (!empty($lines)) {
+                foreach ($lines as $line) {
+                    $available[] = $line->term_id;
+                }
+            }
+            return $available;
+        }
+		return [];
+	}
+
+	private function processAttributes(): void {
+		$this->isSizeFilter = checkFilterHasSize($this->data['attributes']);
+		$this->processCompoundAttributes();
+	}
+
+	private function processCompoundAttributes(): void {
+		if (!empty($this->data['attributes']['product_compound'])) {
+			$certifications = $this->data['attributes']['product_compound'];
+			$this->product_compounds = $certifications;
+			$this->data['attributes']['compound_certification'] = array_shift($certifications);
+			$this->data['attributes']['product_compound'] = ProductsFilterHelper::getCompoundProduct($this->data['attributes']['product_compound']);
+		}
+
+		$this->processCompoundSingle();
+	}
+
+	private function processCompoundSingle(): void {
+		if (empty($this->data['attributes']['product_compound_single'])) {
+			return;
+		}
+
+		if (empty($this->data['attributes']['product_compound'])) {
+			$this->data['attributes']['product_compound'] = $this->data['attributes']['product_compound_single'];
+		} else {
+			$this->data['attributes']['product_compound'] = array_merge(
+				$this->data['attributes']['product_compound'],
+				$this->data['attributes']['product_compound_single']
+			);
+		}
+
+		unset($this->data['attributes']['product_compound_single']);
+	}
+
+	private function getProductLinesFromContactMedia(): array {
+		$productLines = [];
+		foreach ($this->data['attributes']['product_contact_media'] as $media) {
+			$lines = get_the_terms($media, 'product_line');
+			if ($lines) {
+				foreach ($lines as $line) {
+					$productLines[] = $line;
+				}
+			}
+		}
+		return $productLines;
+	}
+
+	private function renderProductLine($line): void {
+		$productTypes = $this->getProductTypes($line);
+		if (!isset($productTypes)) {
+			return;
+		}
+
+		get_template_part('template-parts/product', 'category', [
+			'category' => $line,
+			'children' => $productTypes,
+		]);
+
+		$this->updateTermFilters($productTypes);
+	}
+
+	private function getProductTypes($line): ?array {
+		$query = [
+			[
+				'product_line' => [
+					'value' => [$line->term_id],
+					'compare' => 'IN',
+				]
+			],
+		];
+
+		if (!empty($this->product_compounds)) {
+			$query[] = [
+				'certification_compound' => [
+					'value' => $this->product_compounds,
+					'compare' => 'IN',
+				]
+			];
+		}
+
+		if (!empty($this->data['attributes'])) {
+			$includes = $this->getTermsIdsByProduct($this->product_ids, 'product_custom_type');
+			return $includes ? ProductsFilterHelper::getProductCustomType($query, false, $includes) : null;
+		}
+
+		return ProductsFilterHelper::getProductCustomType($query);
+	}
+
+	private function updateTermFilters(array $productTypes): void {
+		$this->total += count($productTypes);
+		$productTypesArray = array_map(fn($type) => $type->term_id, $productTypes);
+		$this->termFilters = array_merge($productTypesArray, $this->termFilters);
+	}
+
+	private function processProductType(): void {
+		unset($this->data['_wp_http_referer']);
+		$productType = get_term_by('term_id', $this->productTypeId, 'product_custom_type');
+
+		if ($productType) {
+			if ( empty($this->categoryType) ) {
+				$skuTypes = ProductsFilterHelper::getSkuTypes();
+				$this->total = 0;
+				$this->product_ids = [];
+				ob_start();
+				echo '<div class="row">';
+				foreach ($skuTypes as $type) {
+					$skuList = ProductsFilterHelper::taxonomyProductIdList( $this->productTypeId, $type );
+					if ( $skuList) {
+						$this->product_ids = array_merge($this->product_ids, $skuList);
+						$this->total++;
+						$this->renderProductChild( $productType, $type );
+					}
+				}
+				echo '</div>';
+				$this->results = ob_get_clean();
+
+				if ($this->total === 0 || $this->total === 1) {
+					$term_link      = get_term_link( $productType );
+					$this->redirect = add_query_arg( 'data-filter', base64_encode( json_encode( $this->data ) ), $term_link );
+				}
+			} else {
+				$this->data['categoryType'] = $this->categoryType;
+				$term_link      = get_term_link( $productType );
+				$this->redirect = add_query_arg( 'data-filter', base64_encode( json_encode( $this->data ) ), $term_link );
+			}
+		}
+	}
+
+	private function renderProductChild($productType, $type = '')
+	{
+		if ( isset( $productType )) {
+			get_template_part('template-parts/product', 'category_child', [
+				'category' => $productType,
+				'type' => $type,
+			]);
+		}
+
+	}
+
+	private function processProductMetaData(): void {
+		if (empty($this->product_ids)) {
+			return;
+		}
+
+		$isSurfaceEquipment = gi_product_has_surface_equipment($this->product_ids[0]);
+
+		$this->resultMetas = ProductsFilterHelper::getAvailableAttributes($this->product_ids, $isSurfaceEquipment);
+		if (!$isSurfaceEquipment) {
+			if (empty($this->resultMetas['product_compound']) && !empty($this->data['attributes']['compound_certification'])) {
+				$this->resultMetas['product_compound'] = $this->data['attributes']['compound_certification'];
+			} else {
+				$this->resultMetas['product_compound'] = $this->getTermsIdsByProduct($this->product_ids, 'compound_certification');
+			}
+		} else {
+            if (!empty($this->data['attributes']['sellable'])) {
+                $this->surfaceLineAvailable = $this->getSurfaceLineAvailable();
+            }
+        }
+	}
+
+	private function getTermsIdsByProduct( array $product_ids, string $taxonomy = 'product_group' ): array {
+		if ( empty( $product_ids ) ) {
+			return [];
+		}
+
+		return ProductsFilterHelper::getTermsIdsByProduct( $product_ids, $taxonomy );
+	}
+
+    /**
+     * Clear product cache when requested
+     * @example https://domain.com/wp-admin/?clear_product_cache=1
+     */
+    public function maybeClearCache(): void
+    {
+        // Only process for logged-in users with manage_options capability
+        if (!is_user_logged_in() || !current_user_can('manage_options')) {
+            return;
+        }
+
+        if (isset($_GET['clear_product_cache']) && $_GET['clear_product_cache'] === '1') {
+            $deleted_count = ProductsFilterHelper::clearTransientCaches();
+
+            add_action('admin_notices', function () use ($deleted_count) {
+                echo '<div class="notice notice-success is-dismissible">';
+                echo '<p>' . sprintf(__('Product filter cache cleared. %d cache entries deleted.', 'cabling'), $deleted_count) . '</p>';
+                echo '</div>';
+            });
+
+            if (!is_admin()) {
+                wp_redirect(remove_query_arg('clear_product_cache'));
+                exit;
+            }
+        }
+    }
+}
+
+// Initialize the handler
+new ProductsFilterHandler();

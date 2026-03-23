@@ -1,0 +1,115 @@
+{
+  "key": "group_child_pages_columns",
+  "title": "Child Pages Columns Block",
+  "fields": [
+    {
+      "key": "field_heading",
+      "label": "Heading",
+      "name": "heading",
+      "type": "text",
+      "instructions": "Enter the main heading for this section",
+      "required": 0
+    },
+    {
+      "key": "field_description",
+      "label": "Description",
+      "name": "description",
+      "type": "textarea",
+      "instructions": "Enter a description to display below the heading",
+      "required": 0
+    },
+    {
+      "key": "field_columns",
+      "label": "Number of Columns",
+      "name": "columns",
+      "type": "select",
+      "instructions": "Select the number of columns to display",
+      "required": 1,
+      "choices": {
+        "2": "2 Columns",
+        "3": "3 Columns",
+        "4": "4 Columns"
+      },
+      "default_value": "4"
+    },
+    {
+      "key": "field_children_pages",
+      "label": "Children Pages",
+      "name": "children_pages",
+      "type": "repeater",
+      "instructions": "Add child pages with custom headings and descriptions.",
+      "required": 0,
+      "layout": "block",
+      "min": 0,
+      "button_label": "Add Child Page",
+      "sub_fields": [
+        {
+          "key": "field_child_page",
+          "label": "Select a page",
+          "name": "child_page",
+          "type": "post_object",
+          "instructions": "Select a child page to display.",
+          "required": 1,
+          "allow_null": 0,
+          "multiple": 0,
+          "return_format": "id",
+          "post_type": [
+            "page"
+          ]
+        },
+        {
+          "key": "field_child_heading",
+          "label": "Heading",
+          "name": "child_heading",
+          "type": "text",
+          "instructions": "Enter a custom heading for this child page.",
+          "required": 0
+        },
+        {
+          "key": "field_child_heading_hover",
+          "label": "Heading Hover",
+          "name": "child_heading_hover",
+          "type": "text",
+          "instructions": "Enter a custom heading for this child page.",
+          "required": 0
+        },
+        {
+          "key": "field_child_description",
+          "label": "Description",
+          "name": "child_description",
+          "type": "textarea",
+          "instructions": "Enter a custom description for this child page.",
+          "required": 0
+        }
+      ]
+    },
+    {
+      "key": "field_label_position",
+      "label": "Label Position",
+      "name": "label_position",
+      "type": "select",
+      "instructions": "Select the position of label",
+      "required": 1,
+      "choices": {
+        "bottom": "Bottom",
+        "top": "Top"
+      },
+      "default_value": "bottom"
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf/webshop-child-pages-columns"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": ""
+}
